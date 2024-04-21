@@ -1,0 +1,50 @@
+<!-- index.html -->
+{% extends "WL/layout.html" %}
+
+{% block body %}
+    <h1>Anime</h1>
+    {% for message in messages %}
+    <strong>HI</strong> {{ message }}
+    {% endfor %}
+    <div class="anime-container">
+        {% for anime in anime_list %}
+            <div class="anime-item">
+                <img src="{{ anime.image.url }}" alt="{{ anime.english_name }}">
+                <p>{{ anime.english_name }}</p>
+                <form method="post" action="{% url 'add_to_cart' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="anime_id" value="{{ anime.mal_id }}">
+                    <button type="submit">Add to Cart</button>
+                </form>
+                <p>Score: {{ anime.score }}</p>
+            </div>
+            {% if forloop.counter|divisibleby:4 %}
+                </div><div class="anime-container">
+            {% endif %}
+        {% endfor %}
+    </div>
+    
+    
+    <form method="post" action="{% url 'empty_cart' %}">
+        {% csrf_token %}
+        <button type="submit">Empty Cart</button>
+    </form>
+    <form method="post" action="{% url 'index' %}">
+        {% csrf_token %}
+        <select name="score">
+            <option value="1">1.0 - 1.9</option>
+            <option value="2">2.0 - 2.9</option>
+            <option value="3">3.0 - 3.9</option>
+            <option value="4">4.0 - 4.9</option>
+            <option value="5">5.0 - 5.9</option>
+            <option value="6">6.0 - 6.9</option>
+            <option value="7">7.0 - 7.9</option>
+            <option value="8">8.0 - 8.9</option>
+            <option value="9">9.0 - 9.9</option>
+            <option value="10">10.0</option>
+        </select>
+        <button type="submit">Filter</button>
+    </form>
+    
+    
+{% endblock %}
