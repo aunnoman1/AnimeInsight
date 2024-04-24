@@ -1,0 +1,25 @@
+<!-- cart.html -->
+{% extends "WL/layout.html" %}
+
+{% block body %}
+    <h1>Wish-List</h1>
+    <div class="anime-container">
+       
+        {% if anime_items_in_cart %}
+            {% for anime in anime_items_in_cart %}
+                <div class="anime-item">
+                    <img src="{{ anime.image.url }}" alt="{{ anime.english_name }}">
+                    <p>{{ anime.english_name }}</p>
+                    <p>Score: {{ anime.score }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Your cart is empty.</p>
+        {% endif %}
+
+    </div>
+    <form method="post" action="{% url 'empty_cart' %}">
+        {% csrf_token %}
+        <button type="submit">Empty Cart</button>
+    </form>
+{% endblock %}
