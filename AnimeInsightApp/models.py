@@ -93,3 +93,8 @@ class Request(models.Model):
     class Meta:
         managed = False
         db_table = 'request'
+
+class Profile(models.Model):
+    userid=models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)
+    dob = models.DateField()
+    registered = models.BooleanField(default=False)
