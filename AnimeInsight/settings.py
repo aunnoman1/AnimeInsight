@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-o)=45(n#urw3vllkg9m61j6^jap@^=^uni01xopfkewnn!x)vx'
+SECRET_KEY = 'django-insecure-8$8j-ah)5pt!#j08qymo9i-)=*6^25lh-kn(2l$_anr3_(ddx_'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -81,11 +81,10 @@ DATABASES = {
         'USER': 'sa',
         'PASSWORD': '12345678',
         'HOST': 'localhost',
-        #'PORT': '',
-        'OPTIONS':{
+        'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
-            'Trusted_Connection':'yes',
-        },
+            'Trusted_Connection': 'yes',
+        }
     }
 }
 
@@ -131,4 +130,4 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'AnimeInsightApp.CustomUser'
+AUTH_USER_MODEL = 'AnimeInsightApp.User'
