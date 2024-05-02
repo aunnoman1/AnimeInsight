@@ -135,4 +135,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'AnimeInsightApp.User'
 
-LOGIN_URL = ''
+LOGIN_URL = '/login'
