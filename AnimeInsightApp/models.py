@@ -44,7 +44,7 @@ class AnimeMetadata(models.Model):
 
 
 class Historywatch(models.Model):
-    userid = models.ForeignKey(User, models.CASCADE, db_column='userID', primary_key=True)  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
+    userid = models.ForeignKey(User, models.CASCADE, db_column='userID')  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
     animeid = models.ForeignKey(AnimeMetadata, models.CASCADE, db_column='AnimeID')  # Field name made lowercase.
 
     class Meta:
@@ -54,7 +54,7 @@ class Historywatch(models.Model):
 
 
 class Rating(models.Model):
-    userid = models.ForeignKey(User, models.CASCADE, db_column='userID', primary_key=True)  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
+    userid = models.ForeignKey(User, models.CASCADE, db_column='userID')  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
     animeid = models.ForeignKey(AnimeMetadata, models.CASCADE, db_column='AnimeID')  # Field name made lowercase.
     rating = models.IntegerField(blank=True, null=True)
 
@@ -78,7 +78,7 @@ class Recommendation(models.Model):
 
 
 class Wishlist(models.Model):
-    userid = models.ForeignKey(User, models.CASCADE, db_column='userID', primary_key=True)  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
+    userid = models.ForeignKey(User, models.CASCADE, db_column='userID')  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
     animeid = models.ForeignKey(AnimeMetadata, models.CASCADE, db_column='AnimeID')  # Field name made lowercase.
 
     class Meta:
@@ -98,3 +98,36 @@ class Profile(models.Model):
     userid=models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)
     dob = models.DateField()
     registered = models.BooleanField(default=False)
+
+class FavGenres(models.Model):
+    userid=models.ForeignKey(User,on_delete=models.CASCADE)
+    
+
+    GENRE_CHOICES = [
+        ("Action","Action"),
+        ("Adventure","Adventure"),
+        ("Avant Garde","Avant Garde"),
+        ("Award Winning","Award Winning"),
+        ("Boys Love","Boys Love"),
+        ("Comedy","Comedy"),
+        ("Drama","Drama"),
+        ("Ecchi","Ecchi"),
+        ("Erotica","Erotica"),
+        ("Fantasy","Fantasy"),
+        ("Girls Love","Girls Love"),
+        ("Gourmet","Gourmet"),
+        ("Hentai","Hentai"),
+        ("Horror","Horror"),
+        ("Mystery","Mystery"),
+        ("Romance","Romance"),
+        ("Sci-Fi","Sci-Fi"),
+        ("Slice of Life","Slice of Life"),
+        ("Sports","Sports"),
+        ("Supernatural","Supernatural"),
+        ("Suspense","Suspense"),
+    ]
+
+    genre=models.CharField(null=False,max_length=20,choices=GENRE_CHOICES)
+
+    class Meta:
+        unique_together=(('userid','genre'),)
