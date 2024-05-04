@@ -44,7 +44,7 @@ class AnimeMetadata(models.Model):
 
 
 class Historywatch(models.Model):
-    userid = models.ForeignKey(User, models.CASCADE, db_column='userID')  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
+    userid = models.ForeignKey(User, models.CASCADE, db_column='userID', primary_key=True)  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
     animeid = models.ForeignKey(AnimeMetadata, models.CASCADE, db_column='AnimeID')  # Field name made lowercase.
 
     class Meta:
@@ -54,7 +54,7 @@ class Historywatch(models.Model):
 
 
 class Rating(models.Model):
-    userid = models.ForeignKey(User, models.CASCADE, db_column='userID')  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
+    userid = models.ForeignKey(User, models.CASCADE, db_column='userID', primary_key=True)  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
     animeid = models.ForeignKey(AnimeMetadata, models.CASCADE, db_column='AnimeID')  # Field name made lowercase.
     rating = models.IntegerField(blank=True, null=True)
 
@@ -78,7 +78,7 @@ class Recommendation(models.Model):
 
 
 class Wishlist(models.Model):
-    userid = models.ForeignKey(User, models.CASCADE, db_column='userID')  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
+    userid = models.ForeignKey(User, models.CASCADE, db_column='userID', primary_key=True)  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
     animeid = models.ForeignKey(AnimeMetadata, models.CASCADE, db_column='AnimeID')  # Field name made lowercase.
 
     class Meta:
@@ -87,8 +87,8 @@ class Wishlist(models.Model):
         unique_together = (('userid', 'animeid'),)
 
 class Request(models.Model):
-    userid = models.ForeignKey(User, models.DO_NOTHING, db_column='userID', blank=True, null=True)  # Field name made lowercase.
-    animename = models.CharField(db_column='AnimeName', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # Field name made lowercase.
+    userid = models.ForeignKey(User, models.CASCADE, db_column='userID', primary_key=True)  # Field name made lowercase.
+    animename = models.CharField(db_column='AnimeName', max_length=50, db_collation='SQL_Latin1_General_CP1_CI_AS')  # Field name made lowercase.
 
     class Meta:
         managed = False

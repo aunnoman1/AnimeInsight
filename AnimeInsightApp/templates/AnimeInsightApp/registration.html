@@ -47,28 +47,27 @@
          <div class="logo">
              <img src="your-logo-image.jpg" alt="Your Logo" width="100">
          </div>
-         <form action="{% url 'register' %}" method="post">
+         <form action="{% url 'AnimeInsightApp:register' %}" method="post">
              {% csrf_token %}
              <div class="form-group">
-                 <label for="username">Username:</label>
-                 <input type="text" class="form-control" id="username" placeholder="Enter username" required>
+                 <label for="username" class="text-white">Username:</label>
+                 <input type="text" class="form-control" name='username' placeholder="Enter username" required>
+                 <label for="email" class="text-white">Email:</label>
+                 <input type="email" class="form-control" name="email" placeholder="Enter email">
+                 <label for="password1" class="text-white">Password:</label>
+                 <input type="password" class="form-control" name="password1" placeholder="Enter password" required>
+                 <label for="password2" class="text-white">Confirm Password:</label>
+                 <input type="password" class="form-control" name="password2" placeholder="Confirm password" required>
              </div>
-             <div class="form-group">
-                 <label for="email">Email:</label>
-                 <input type="email" class="form-control" id="email" placeholder="Enter email" required>
+             {% if message %}
+             <div class="alert alert-warning"> <!--Style the message paragraph with .alert and .alert-warning class -->
+                {{ message }}
              </div>
-             <div class="form-group">
-                 <label for="password1">Password:</label>
-                 <input type="password" class="form-control" id="password1" placeholder="Enter password" required>
-             </div>
-             <div class="form-group">
-                 <label for="password2">Confirm Password:</label>
-                 <input type="password" class="form-control" id="password2" placeholder="Confirm password" required>
-             </div>
+             {% endif %}
              <button type="submit" class="btn btn-primary">Register</button>
          </form>
          <br><br>
-         <a href="{% url 'login' %}" class="btn btn-dark">Already have an account? Login here</a>
+         <a href="{% url 'AnimeInsightApp:login_request' %}" class="btn btn-dark">Already have an account? Login here</a>
      </div>
 </body>
 </html
