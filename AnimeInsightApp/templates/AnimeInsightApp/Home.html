@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anime Recommendation</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <style>
         .header {
             background-color: #990000; /* Red color */
@@ -61,9 +64,15 @@
                     </div>
                 </div>
                 <div class="col-md-1">
-                    <a href="profile.html">
-                        <img src="https://lh3.googleusercontent.com/Ryg5ih-fOWbpEGDpbJYJz5RTq3_28Tvo2h3JQRCdiz16lw5ghitDMN6hcWA57g0d6_8VOqQYcCemRBOfZGQA64ZKkFOn71zuF1LDsXwCh4ywF-_z6VqxbBqmbQvK_-PWfZcztxDd1WDTEEUHX6GdP60" alt="Profile Picture" class="img-fluid rounded-circle">
-                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          {{user.username}}
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                          <a class="dropdown-item" href="#">Profile</a>
+                          <a class="dropdown-item" href="{% url 'AnimeInsightApp:logout_request' %}">Logout</a>
+                        </div>
+                      </div>
                 </div>
             </div>
         </div>
@@ -80,8 +89,9 @@
         <h2 class="text-white">Your Recommendations</h2>
         <div class="row recommendation-images">
             <div class="col-xl">
-                <a href="anime_detail_page_1.html">
+                <a href="anime_detail_page_1.html"data-toggle="popover" data-trigger="hover"  data-content="Some content 1" data-placement="bottom">
                     <img src="https://th.bing.com/th?id=OIP.zlUSNp7hIqABtdpts1zJ8AHaOG&w=181&h=345&c=8&rs=1&qlt=90&o=6&pid=3.1&rm=2" alt="Anime 1" class="img-fluid hover-effect">
+
                 </a>
             </div>
             <div class="col-xl">
@@ -107,5 +117,10 @@
         </div>
 
     </div>
+    <script>
+        $(document).ready(function(){
+            $('[data-toggle="popover"]').popover();
+        });
+   </script>
 </body>
 </html>
