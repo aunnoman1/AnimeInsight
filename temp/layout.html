@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Movie Library{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'S.css' %}">
+    <!-- Add any additional CSS or meta tags here -->
+   
+   <style>
+    /* Move the navbar styles inside the style tag */
+    .navbar ul {
+        list-style-type: none;
+        background-color: hsl(0, 0%, 25%);
+        padding: 0px;
+        margin: 0px;
+        overflow: hidden;
+    }
+    
+    .navbar a {
+        color: white;
+        text-decoration: none;
+        padding: 15px;
+        display: block;
+        text-align: center;
+    }
+    
+    .navbar a:hover {
+        background-color: hsl(0, 0%, 10%);
+    }
+    
+    .navbar li {
+        float: left;
+    }
+    </style>
+
+</head>
+
+<body>
+    <nav class="navbar">
+        <h1>Movie Library</h1>
+        <ul>
+            <li><a href="/">Home</a></li> <!-- Close the <a> tag -->
+            <li><a href="">Trending</a></li>
+            <li><a href="">Wishlist</a></li>
+            <li><a href="">History</a></li> <!-- Close the <a> tag -->
+        </ul>
+    </nav>
+
+    <div class="container">
+        {% block body %}
+        {% endblock %}
+    </div>
+
+    <!-- Add any additional scripts or footer content here -->
+</body>
+
+</html>
