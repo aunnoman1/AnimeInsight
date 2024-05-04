@@ -40,6 +40,10 @@
         .complete-profile-page a:hover {
             color: #23527c;
         }
+        .genre-list li {
+            display: inline-block; /* Display items horizontally */
+            margin-right: 10px; /* Adjust spacing between items */
+        }
     </style>
 </head>
 <body>
@@ -48,7 +52,7 @@
             <!-- Add your logo here -->
             <h2 class = "text-white">Complete your profile</h2>
         </div>
-        <form method="post">
+        <form method="post" action = "{% url 'AnimeInsightApp:complete_profile' %}" onsubmit="return validateForm()">
             {% csrf_token %}
             <div class="form-group">
                 <label for="first_name" class="text-white">First Name:</label>
@@ -57,20 +61,31 @@
                 <input type="text" class="form-control" name="last_name" placeholder="Enter last name" required>
                 <label for="date_of_birth" class="text-white">Date of Birth:</label>
                 <input type="date" class="form-control" name="date_of_birth" placeholder="Enter date of birth" required>
-            </div>
+            
             <label for="genres" class="text-white">Favorite Genres:</p>
-            <ul class="list-unstyled">
+            <ul class="genre-list">
                 {% for genre in genres %}
                 <li>
-                    <input type="checkbox" name="genres" value="{{ genre.id }}">
-                    {{ genre.name }}
+                    <input type="checkbox" name="genres" value="{{ genre }}">
+                    {{ genre }}
                 </li>
                 {% empty %}
                 <li>No genres available</li>
                 {% endfor %}
             </ul>
+            </div>
             <button type="submit" class="btn btn-primary">Save Profile</button>
         </form>
     </div>
+    <script>
+        function validateForm() {
+            var checkboxes = document.querySelectorAll('input[name="genres"]:checked');
+            if (checkboxes.length < 3) {
+                alert("Please select at least 3 genres.");
+                return false;
+            }
+            return true;
+        }
+    </script>
 </body>
 </html>

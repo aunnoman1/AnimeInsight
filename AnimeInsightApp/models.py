@@ -96,7 +96,7 @@ class Request(models.Model):
 
 class Profile(models.Model):
     userid=models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)
-    dob = models.DateField()
+    dob = models.DateField(null=True)
     registered = models.BooleanField(default=False)
 
 class FavGenres(models.Model):
