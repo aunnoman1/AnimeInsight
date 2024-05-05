@@ -1,0 +1,90 @@
+{% extends "AnimeInsightApp/layout.html" %}
+{% block title %}Trending Anime{% endblock %}
+
+{% block body %}
+<style>
+    h1 {
+        position: relative;
+        padding: 0;
+        margin: 0;
+        font-family: "Raleway", sans-serif;
+        font-weight: 300;
+        font-size: 40px;
+        color: white;
+        -webkit-transition: all 0.4s ease 0s;
+        -o-transition: all 0.4s ease 0s;
+        transition: all 0.4s ease 0s;
+    }
+    
+    h1 span {
+        display: block;
+        font-size: 0.5em;
+        line-height: 1.3;
+    }
+    
+    h1 em {
+        font-style: normal;
+        font-weight: 600;
+    }
+    
+    /* === HEADING STYLE #1 === */
+    .one h1 {
+        font-family: "Raleway", sans-serif;
+        font-style: normal;
+        text-align: center;
+        text-transform: uppercase;
+        padding-bottom: 5px;
+    }
+    
+    .one h1:before {
+        width: 28px;
+        height: 5px;
+        display: block;
+        content: "";
+        position: absolute;
+        bottom: 3px;
+        left: 50%;
+        margin-left: -14px;
+        background-color: #b80000;
+    }
+    
+    .one h1:after {
+        width: 100px;
+        height: 1px;
+        display: block;
+        content: "";
+        position: relative;
+        margin-top: 25px;
+        left: 50%;
+        margin-left: -50px;
+        background-color: #b80000;
+    }
+</style>
+<br>
+<div class="one">
+    <h1>Trending Anime</h1>
+</div>
+<br>
+<div class="anime-container">
+    {% for anime in anime_list %}
+    <div class="anime-item">
+        <form method="POST" action="{% url 'add_to_wishlist' anime_id=anime.anime_id %}">
+
+            {% csrf_token %}
+            <input type="hidden" name="anime_id" value="{{ anime.anime_id }}">
+            <img src="{{ anime.image_url }}" alt="{{ anime.name }}" width="100" height="150">
+            <h3>{{ anime.name }}</h3>
+            <p>Score: {{ anime.score }}</p>
+            <button type="submit">Add to Wishlist</button>
+            <button type="">H</button>
+        </form>
+    </div>
+    {% if forloop.counter|divisibleby:4 %}
+</div>
+<div class="anime-container">
+    {% endif %}
+    {% empty %}
+    <p>No anime found.</p>
+    {% endfor %}
+</div>
+{% endblock %}
