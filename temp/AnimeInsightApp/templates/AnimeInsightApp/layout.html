@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'S.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <!-- Add any additional CSS or meta tags here -->
+   
+   <style>
+    /* Move the navbar styles inside the style tag */
+    .navbar ul {
+        list-style-type: none;
+        background-color: hsl(0, 0%, 25%);
+        padding: 0px;
+        margin: 0px;
+        overflow: hidden;
+    }
+    
+    .navbar a {
+        color: white;
+        text-decoration: none;
+        padding: 15px;
+        display: block;
+        text-align: center;
+    }
+    
+    .navbar a:hover {
+        background-color: DarkRed;
+    }
+    
+    .navbar li {
+        float: left;
+    }
+    </style>
+
+</head>
+
+<body>
+    <nav class="navbar">
+       
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="{% url 'AnimeInsightApp:index' %}">Trending</a></li>
+            <li><a href="{% url 'AnimeInsightApp:wishlist' %}">Wishlist</a></li>
+
+            <li><a href="{% url 'AnimeInsightApp:view_history' %}">History</a></li> 
+        </ul>
+    </nav>
+
+    <div class="container">
+        {% block body %}
+        {% endblock %}
+    </div>
+
+    <!-- Add any additional scripts or footer content here -->
+</body>
+
+</html>

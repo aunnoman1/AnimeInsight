@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registration Page</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #2c2c2c;
+         }
+         .register-page {
+             width: 350px;
+             margin: 250px auto;
+             background-color: #505050;
+             padding: 20px;
+             border-radius: 10px;
+             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+         }
+         .register-page .logo {
+             text-align: center;
+             margin-bottom: 20px;
+         }
+         .register-page form {
+             margin-top: 20px;
+         }
+         .register-page button[type="submit"] {
+             background-color: #c20600;
+             color: #fff;
+             padding: 10px 20px;
+             border: none;
+             border-radius: 5px;
+             cursor: pointer;
+         }
+         .register-page button[type="submit"]:hover {
+             background-color: #8d0202;
+         }
+         .register-page a {
+             text-decoration: none;
+             color: #337ab7;
+         }
+         .register-page a:hover {
+             color: #23527c;
+         }
+     </style>
+</head>
+<body>
+    <div class="register-page">
+         <div class="logo">
+             <img src="your-logo-image.jpg" alt="Your Logo" width="100">
+         </div>
+         <form action="{% url 'AnimeInsightApp:register' %}" method="post">
+             {% csrf_token %}
+             <div class="form-group">
+                 <label for="username" class="text-white">Username:</label>
+                 <input type="text" class="form-control" name='username' placeholder="Enter username" required>
+                 <label for="email" class="text-white">Email:</label>
+                 <input type="email" class="form-control" name="email" placeholder="Enter email">
+                 <label for="password1" class="text-white">Password:</label>
+                 <input type="password" class="form-control" name="password1" placeholder="Enter password" required>
+                 <label for="password2" class="text-white">Confirm Password:</label>
+                 <input type="password" class="form-control" name="password2" placeholder="Confirm password" required>
+             </div>
+             {% if message %}
+             <div class="alert alert-warning"> <!--Style the message paragraph with .alert and .alert-warning class -->
+                {{ message }}
+             </div>
+             {% endif %}
+             <button type="submit" class="btn btn-primary">Register</button>
+         </form>
+         <br><br>
+         <a href="{% url 'AnimeInsightApp:login_request' %}" class="btn btn-dark">Already have an account? Login here</a>
+     </div>
+</body>
+</html
