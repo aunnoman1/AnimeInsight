@@ -94,6 +94,29 @@ class Request(models.Model):
         managed = False
         db_table = 'request'
 
+class AnimeTensors(models.Model):
+    animeid = models.OneToOneField(AnimeMetadata, models.CASCADE, db_column='AnimeID', primary_key=True)  # Field name made lowercase.
+    tensor_1 = models.FloatField()
+    tensor_2 = models.FloatField()
+    tensor_3 = models.FloatField()
+    tensor_4 = models.FloatField()
+    tensor_5 = models.FloatField()
+    tensor_6 = models.FloatField()
+    tensor_7 = models.FloatField()
+    tensor_8 = models.FloatField()
+    tensor_9 = models.FloatField()
+    tensor_10 = models.FloatField()
+    tensor_11 = models.FloatField()
+    tensor_12 = models.FloatField()
+    tensor_13 = models.FloatField()
+    tensor_14 = models.FloatField()
+    tensor_15 = models.FloatField()
+    tensor_16 = models.FloatField()
+
+    class Meta:
+        managed = False
+        db_table = 'anime_tensors'
+
 class Profile(models.Model):
     userid=models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)
     dob = models.DateField(null=True)
