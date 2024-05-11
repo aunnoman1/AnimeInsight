@@ -4,7 +4,8 @@ from django.contrib.auth import authenticate, login , logout
 from django.shortcuts import redirect
 from django.db import connection
 from django.conf import settings
-from .models import User,FavGenres,Profile
+from .models import User, FavGenres, Profile, Wishlist, AnimeMetadata,Historywatch
+from django.contrib import messages
 import logging
 import os
 
@@ -15,6 +16,188 @@ from joblib import load
 import threading
 
 logger = logging.getLogger(__name__)
+
+
+def index(request):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            '''
+             SELECT  Top 1000 * FROM Anime_Metadata
+    WHERE Score >7.99
+            '''
+        )
+        anime_list = dictfetchall(cursor)
+        
+
+    selected_score = request.POST.get('score')
+    if selected_score:
+        min_score = float(selected_score)
+        max_score = min_score + 0.99
+        # Filter the fetched objects based on the selected score
+        anime_list = [anime for anime in anime_list if min_score <= anime['score'] < max_score]
+
+    return render(request, 'AnimeInsightApp/index.html', {'anime_list': anime_list})
+
+
+def dictfetchall(cursor):
+    columns = [col[0] for col in cursor.description]
+    return [
+        dict(zip(columns, row))
+        for row in cursor.fetchall()
+    ]
+# Views for managing anime wishlist
+
+
+@login_required
+def view_wishlist(request):
+    # Fetch the current user instance from the request
+    user_instance = request.user
+    
+    # Execute raw SQL query to fetch wishlist items for the current user
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT
+                w.userid,
+                a.anime_id,
+                a.name,
+                a.image_url,
+                a.score
+                
+            FROM wishlist w
+            INNER JOIN Anime_Metadata a ON w.animeid = a.anime_id
+            WHERE w.userid = %s
+        """, [user_instance.id])
+        wishlist = cursor.fetchall()
+    
+    return render(request, 'AnimeInsightApp/wishlist.html', {'wishlist': wishlist})
+
+
+
+@login_required
+def remove_from_wishlist(request, anime_id):
+    if request.method == 'POST':
+        
+        user_instance = request.user
+
+        # Execute raw SQL query to delete the wishlist item
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM wishlist WHERE userid = %s AND animeid = %s", [user_instance.id, anime_id])
+            rows_deleted = cursor.rowcount
+
+        if rows_deleted > 0:
+            messages.success(request, 'Anime removed from wishlist')
+        else:
+            messages.error(request, 'Anime not found in wishlist')
+    return redirect('AnimeInsightApp:wishlist')
+
+#----
+@login_required
+def add_to_history(request, anime_id):
+    if request.method == 'POST':
+        user_instance = request.user
+        
+        anime_id = int(anime_id)
+        
+        if not Historywatch.objects.filter(userid=user_instance, animeid_id=anime_id).exists():
+            Historywatch.objects.create(userid=user_instance, animeid_id=anime_id)
+            messages.success(request, 'Anime added to history')
+        else:
+            messages.info(request, 'Anime already in history')
+    
+    return redirect('AnimeInsightApp:index')
+
+
+@login_required
+def view_history(request):
+    user_instance = request.user
+    
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT
+                h.userid,
+                a.anime_id,
+                a.name,
+                a.image_url,
+                a.aired,
+                a.score
+            FROM historywatch h
+            INNER JOIN Anime_Metadata a ON h.animeid = a.anime_id
+            WHERE h.userid = %s
+        """, [user_instance.id])
+        history = cursor.fetchall()
+    
+    return render(request, 'AnimeInsightApp/history.html', {'history': history})
+
+
+@login_required
+def clear_history(request):
+    user_instance = request.user
+
+    with connection.cursor() as cursor:
+        cursor.execute("DELETE FROM Historywatch WHERE userid = %s", [user_instance.id])
+
+    messages.success(request, 'Watch history cleared successfully.')
+
+    return redirect('AnimeInsightApp:view_history')
+
+# Other views...
+
+@login_required
+def add_to_wishlist(request, anime_id):
+    if request.method == 'POST':
+        user_instance = request.user
+
+        anime_id = int(anime_id)
+        
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*) FROM wishlist 
+                WHERE userid = %s AND Animeid = %s
+            """, [user_instance.id, anime_id])
+            row_count = cursor.fetchone()[0]
+
+            if row_count == 0:
+                cursor.execute("""
+                    INSERT INTO wishlist (userid, animeid)
+                    VALUES (%s, %s)
+                """, [user_instance.id, anime_id])
+                messages.success(request, 'Anime added to wishlist')
+            else:
+                messages.info(request, 'Anime already in wishlist')
+
+    return redirect('AnimeInsightApp:index')
+	
+	
+	
+	
+def namegenre_anime(request):
+    # Get the values from the request's GET parameters
+    name = request.GET.get('name')
+    genre = request.GET.get('genre')
+
+    # Filter anime by name and genre if provided, otherwise get all anime
+    if name and genre:
+        anime_list = AnimeMetadata.objects.filter(name__icontains=name, genre=genre)
+    elif name:
+        anime_list = AnimeMetadata.objects.filter(name__icontains=name)
+    elif genre:
+        anime_list = AnimeMetadata.objects.filter(genre=genre)
+    else:
+        anime_list = AnimeMetadata.objects.all()
+
+    return render(request, 'AnimeInsightApp/History.html', {'anime_list': anime_list, 'name': name, 'genre': genre})
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Create your views here.
 
@@ -97,7 +280,7 @@ def complete_profile(request):
         profile.dob=date_of_birth
         profile.registered=True
         profile.save()
-        t= threading.Thread(target=recommend_anime,args=[request])
+        #--t= threading.Thread(target=recommend_anime,args=[request])--
         return redirect('AnimeInsightApp:home')
 
 
@@ -244,3 +427,12 @@ def recommend_anime(request):
     cursor.execute(sql_query, [user_id] + anime_ids)
 
     cursor.close()
+    
+    
+    
+    
+    
+    
+#---------------------------------
+
+    
