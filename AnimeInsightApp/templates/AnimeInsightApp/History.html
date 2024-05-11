@@ -1,0 +1,136 @@
+{% extends "AnimeInsightApp/layout.html" %}
+{% block title %}Watch History{% endblock %}
+
+{% block body %}
+<style>
+   .history-header {
+        margin-bottom: 20px;
+    }
+
+   .history-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-gap: 20px;
+        background-color: black; /* Add background color to the grid */
+        padding: 18px; /* Add padding to the grid */
+    }
+
+   .history-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        border: white; /* Remove border */
+        border-radius: 10px;
+        color: #fff; /* Change text color to white */
+    }
+
+   .history-item img {
+        width: 200px; /* adjust image size */
+        height: 210px;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+
+   .history-grid-break {
+        grid-column: 1 / -1;
+    }
+    /* === BASE HEADING === */ 
+    h1 {
+        position: relative;
+        padding: 0;
+        margin: 0;
+        font-family: "Raleway", sans-serif;
+        font-weight: 300;
+        font-size: 40px;
+        color: white;
+        -webkit-transition: all 0.4s ease 0s;
+        -o-transition: all 0.4s ease 0s;
+        transition: all 0.4s ease 0s;
+    }
+
+    h1 span {
+        display: block;
+        font-size: 0.5em;
+        line-height: 1.3;
+    }
+
+    h1 em {
+        font-style: normal;
+        font-weight: 600;
+    }
+
+    /* === HEADING STYLE #1 === */
+    .one h1 {
+        text-align: center;
+        text-transform: uppercase;
+        padding-bottom: 5px;
+    }
+
+    .one h1:before {
+        width: 28px;
+        height: 5px;
+        display: block;
+        content: "";
+        position: absolute;
+        bottom: 3px;
+        left: 50%;
+        margin-left: -14px;
+        background-color: #b80000;
+    }
+
+    .one h1:after {
+        width: 100px;
+        height: 1px;
+        display: block;
+        content: "";
+        position: relative;
+        margin-top: 25px;
+        left: 50%;
+        margin-left: -50px;
+        background-color: #b80000;
+    }
+    .one button {
+        display: inline-block;
+        background-color: white; /* White background color */
+        color: black; /* Black text color */
+        padding: 10px 20px; /* Add padding */
+        border: none; /* Remove border */
+        border-radius: 5px; /* Add rounded corners */
+        cursor: pointer; /* Add cursor pointer */
+        transition: background-color 0.3s; /* Add smooth transition */
+      }
+      
+    .one button:hover {
+        background-color: red; /* Red background color on hover */
+        color: white; /* White text color on hover */
+      }
+</style>
+<br>
+<div class="one">
+    <h1 class="one">Watch-History</h1>
+    <br>
+<form method="POST" action="{% url 'AnimeInsightApp:clear_history' %}">
+    {% csrf_token %}
+    <button type="submit">Clear History</button>
+</form>
+</div>
+
+<div class="history-grid">
+    {% if history %}
+        {% for item in history %}
+            <div class="history-item">
+                <img src="{{ item.3 }}" alt="Image of {{ item.2 }}">
+                <h3>{{ item.2 }}</h3>
+                <p>Watched on: {{ item.4 }}</p>
+            </div>
+            {% if forloop.counter|divisibleby:4 %}
+                <!-- Add a break after 4 items -->
+                <div class="history-grid-break"></div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <p>No watch history found.</p>
+    {% endif %}
+</div>
+{% endblock %}
