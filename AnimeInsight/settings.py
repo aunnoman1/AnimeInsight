@@ -51,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'AnimeInsight.urls'
@@ -83,7 +84,7 @@ DATABASES = {
         'NAME': 'AnimeInsight',
         'USER': 'sa',
         'PASSWORD': '12345678',
-        'HOST': 'DESKTOP-CTD6319\SQLEXPRESS',
+        'HOST': 'localhost',
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
             'Trusted_Connection': 'yes',
@@ -139,3 +140,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'AnimeInsightApp.User'
 
 LOGIN_URL = '/login'
+
