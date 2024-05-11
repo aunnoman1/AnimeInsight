@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
@@ -17,5 +17,6 @@ urlpatterns = [
     path('history/', views.view_history, name='view_history'),
     path('add-to-history/<int:anime_id>/', views.add_to_history, name='add_to_history'),
     path('logout/', views.logout_request, name='logout_request'),
+  
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \
   + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -14,8 +14,14 @@ import pandas as pd
 import tensorflow as tf
 from joblib import load
 import threading
+from datetime import datetime
+import pdb
 
 logger = logging.getLogger(__name__)
+
+@tf.keras.utils.register_keras_serializable()
+def split_func(input_str):
+    return tf.strings.split(input_str, sep=", ")
 
 
 def index(request):
@@ -205,7 +211,19 @@ def namegenre_anime(request):
 def home(request):
     context={}
     if request.method=='GET':
-        return render(request, 'AnimeInsightApp/Home.html')
+        cursor = connection.cursor()
+        context['animes']=[]
+        cursor.execute("select AnimeID1 , AnimeID2 , AnimeID3 , AnimeID4 , AnimeID5  from recommendation where userID = %s",[request.user.id])
+        animeids=cursor.fetchone()
+        if isinstance(animeids,tuple):
+            for animeid in animeids:
+                cursor.execute("SELECT Name , Image_URL FROM anime_metadata WHERE anime_id = %s",[animeid])
+                animeinfo=cursor.fetchone()
+                context['animes'].append(animeinfo)
+
+
+        
+        return render(request, 'AnimeInsightApp/Home.html',context=context)
     
 def login_request(request):
     context={}
@@ -266,11 +284,13 @@ def complete_profile(request):
         first_name = request.POST['first_name']
         last_name = request.POST['last_name']
         date_of_birth = request.POST['date_of_birth']
+        gender= request.POST['gender']
         selected_genres = request.POST.getlist('genres')
 
         user = request.user
         user.first_name = first_name
         user.last_name = last_name
+
         user.save()
 
         for genre in selected_genres:
@@ -279,13 +299,16 @@ def complete_profile(request):
         profile = Profile.objects.get(userid=user)
         profile.dob=date_of_birth
         profile.registered=True
+        profile.gender=gender
         profile.save()
-        #--t= threading.Thread(target=recommend_anime,args=[request])--
+        t= threading.Thread(target=recommend_anime,args=[request])
+        t.start()
         return redirect('AnimeInsightApp:home')
 
 
     else:
         context['genres']=[g[0] for g in FavGenres.genre.field.choices]
+        context['genders']=[g[1] for g in Profile.gender.field.choices]
         return render(request,'AnimeInsightApp/complete_profile.html',context)
     
 
@@ -300,12 +323,19 @@ def logout_request(request):
         
 def recommend_anime(request):
     user_id=request.user.id
-    user_mean_score= 8
+    user_mean_score= 8.0
     
     cursor = connection.cursor()
-    # Step 1: Retrieve the user's favorite genres
+    # Step 1: Retrieve the user's details
     cursor.execute("SELECT genre FROM AnimeInsightApp_favgenres WHERE userid_id = %s", [user_id])
     fav_genres = cursor.fetchall()
+
+    cursor.execute("SELECT gender,dob from AnimeInsightApp_profile WHERE userid_id = %s", [user_id])
+    fetched= cursor.fetchone()
+    user_gender=fetched[0]
+    dob=fetched[1]
+    user_age = (datetime.now().date() - dob).days // 365
+    user_df=pd.DataFrame([[user_gender,user_mean_score,user_age]],columns=['Gender','Mean Score','age'])
 
     # Step 2: Get the top 50 anime for each genre from the animemetadata table
     anime_list = []
@@ -313,7 +343,7 @@ def recommend_anime(request):
         cursor.execute("""
             SELECT top 50 anime_id, Score,	Genres,	Type , Studios , Source
             FROM Anime_Metadata
-            WHERE genre LIKE %s
+            WHERE Genres LIKE %s
             order by Score DESC
         """, ['%' + fav_genre[0] + '%'])
         anime_list.extend(cursor.fetchall())
@@ -321,6 +351,7 @@ def recommend_anime(request):
     
     columns = [col[0] for col in cursor.description]
     df = pd.DataFrame(anime_list, columns=columns)
+    df.drop_duplicates(inplace=True)
 
     # Step 3: Use the TensorFlow model to predict ratings for each anime
     model_path=os.path.join(settings.MODELS,'merged_model.keras')
@@ -337,17 +368,15 @@ def recommend_anime(request):
     genre_max_length=9
     source_max_length=1
 
-    @tf.keras.utils.register_keras_serializable()
-    def split_func(input_str):
-        return tf.strings.split(input_str, sep=", ")
+    
 
-    studio_vectorize_layer_model=tf.keras.models.load_model('preprocessing/studio_vectorize_layer_model')
+    studio_vectorize_layer_model=tf.keras.models.load_model(preprocesing_path+'/studio_vectorize_layer_model')
     studio_vectorize_layer = studio_vectorize_layer_model.layers[0]
     num_studios=len(studio_vectorize_layer.get_vocabulary())
-    genre_vectorize_layer_model=tf.keras.models.load_model('preprocessing/genre_vectorize_layer_model')
+    genre_vectorize_layer_model=tf.keras.models.load_model(preprocesing_path+'/genre_vectorize_layer_model')
     genre_vectorize_layer = genre_vectorize_layer_model.layers[0]
     num_genres=len(genre_vectorize_layer.get_vocabulary())
-    source_vectorize_layer_model=tf.keras.models.load_model('preprocessing/source_vectorize_layer_model')
+    source_vectorize_layer_model=tf.keras.models.load_model(preprocesing_path+'/source_vectorize_layer_model')
     source_vectorize_layer = source_vectorize_layer_model.layers[0]
     num_sources=len(source_vectorize_layer.get_vocabulary())
 
@@ -399,17 +428,29 @@ def recommend_anime(request):
     df.drop('Source', axis=1, inplace=True)
 
 
+    encoded_gender = gender_encoder.transform(user_df[['Gender']])  # Fit and transform the column
+    encoded_df = pd.DataFrame(encoded_gender.toarray(), columns=gender_encoder.categories_[0])  # Create a DataFrame from the encoded columns
+
+    user_df=pd.concat([user_df, encoded_df], axis=1)  # Concatenate the original DataFrame with the encoded DataFrame
+    user_df.drop(['Gender'],axis=1,inplace=True)
+
+    user_df.loc[:,'Mean Score']=mean_score_scaler.transform(user_df[['Mean Score']])
+
+    user_df=user_df.reindex(user_df.index.repeat(df.shape[0]))
+
+    user_input=user_df.to_numpy()
+
+
     anime_columns=df.iloc[:,1:1+anime_input_shape].to_numpy(dtype='float32')
     anime_studio_embedding_columns = df.iloc[:,1+anime_input_shape:1+anime_input_shape+studio_max_length].to_numpy()
     anime_genre_embedding_columns= df.iloc[:,1+anime_input_shape+studio_max_length:1+anime_input_shape+studio_max_length+genre_max_length].to_numpy()
     anime_source_embedding_columns = df.iloc[:,-1:].to_numpy()
 
 
-    input={'anime_inputs':anime_columns,'anime_genre_embeddings_inputs':anime_genre_embedding_columns,'anime_studio_embeddings_inputs':anime_studio_embedding_columns,'anime_source_embeddings_inputs':anime_source_embedding_columns}
-
+    input={'user_input':user_input, 'anime_input':anime_columns,'anime_genre_embedding_input':anime_genre_embedding_columns,'anime_studio_embedding_input':anime_studio_embedding_columns,'anime_source_embedding_input':anime_source_embedding_columns}
     
     output=model(input)
-    output = rating_scaler(output)
+    output = rating_scaler.inverse_transform(output)
 
     output_df = pd.DataFrame(output,columns=['rating'])
 

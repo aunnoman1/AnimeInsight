@@ -121,6 +121,15 @@ class Profile(models.Model):
     userid=models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)
     dob = models.DateField(null=True)
     registered = models.BooleanField(default=False)
+    GENDER_CHOICES = [
+        ("Male","Male"),
+        ("Female","Female"),
+        ("Non-Binary","Non-Binary"),
+        ("Unknown_Gender","Prefer not to say"),
+        
+    ]
+    gender=models.CharField(max_length=20,choices=GENDER_CHOICES,default="Unknown_Gender")
+
 
 class FavGenres(models.Model):
     userid=models.ForeignKey(User,on_delete=models.CASCADE)
