@@ -15,6 +15,7 @@ urlpatterns = [
     path('clear-history/', views.clear_history, name='clear_history'),
     path('complete_profile/', views.complete_profile, name='complete_profile'),
     path('history/', views.view_history, name='view_history'),
+    path('filter_by_genre/', views.filter_by_genre, name='filter_by_genre'),
     path('add-to-history/<int:anime_id>/', views.add_to_history, name='add_to_history'),
     path('logout/', views.logout_request, name='logout_request'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \
