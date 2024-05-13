@@ -217,7 +217,7 @@ def home(request):
         animeids=cursor.fetchone()
         if isinstance(animeids,tuple):
             for animeid in animeids:
-                cursor.execute("SELECT Name , Image_URL FROM anime_metadata WHERE anime_id = %s",[animeid])
+                cursor.execute("SELECT anime_id , Name , Image_URL FROM anime_metadata WHERE anime_id = %s",[animeid])
                 animeinfo=cursor.fetchone()
                 context['animes'].append(animeinfo)
 
@@ -470,10 +470,39 @@ def recommend_anime(request):
     cursor.close()
     
     
+def search(request):
+    context={}
+    context['animes']=[]
+    search_str=request.GET.get("q")
+    search_term='%'+search_str+'%'
+    cursor=connection.cursor()
+    cursor.execute("""
+                    select anime_id,[Name],English_name,Image_URL
+                    from Anime_Metadata
+                    where (Name like %s or English_name like %s ) and Genres not like '%%Hentai%%'  and Genres not like '%%Ecchi%%'
+                   """,[search_term,search_term])
+    results=cursor.fetchall()
+    if isinstance(results,list):
+        for result in results:
+            if(result[1]!=None and result[2]!=None):
+                name=result[1]+'('+result[2]+')'
+            elif(result[1]==None):
+                name=result[2]
+            else:
+                name=result[1]
+            id=result[0]
+            image_url=result[3]
+            animeinfo=[id,name,image_url]
+            context['animes'].append(animeinfo)
+    
+    return render(request, 'AnimeInsightApp/search.html',context=context)
+    
+    
+
+    
     
     
     
     
 #---------------------------------
 
-    
