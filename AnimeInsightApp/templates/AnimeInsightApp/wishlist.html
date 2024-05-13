@@ -75,22 +75,22 @@
     <h1 class="one">Wishlist</h1>
 </div>
 <br>
-<div class="wishlist-container">
+<div class="row justify-content-centre">
     {% if wishlist %}
         {% for item in wishlist %}
-            <div class="wishlist-item">
+            <div class="col-md-4">
                 <img src="{{ item.3 }}" alt="{{ item.animeid.name }}">
-                <h3>{{ item.2 }}</h3>
-                <p>Score: {{ item.4|floatformat:"2" }}</p>
+                <h3 class = 'text-white'>{{ item.2 }}</h3>
+                <p  class = 'text-white'>Score: {{ item.4|floatformat:"2" }}</p>
                 <form method="post" action="{% url 'AnimeInsightApp:remove_from_wishlist' anime_id=item.1 %}">
 
                     {% csrf_token %}
-                    <button type="submit">Remove from Wishlist</button>
+                    <button class = "btn btn-secondary" type="submit">Remove from Wishlist</button>
                 </form>
             </div>
         {% endfor %}
     {% else %}
         <p>Your wishlist is empty.</p>
     {% endif %}
-</div>
+ </div>
 {% endblock %}

@@ -43,8 +43,8 @@
             background-color: #7e0202; /* Red color */
         }
         body { 
-            background: black; /* Adding !important forces the browser to overwrite the default style applied by Bootstrap */
-        } 
+            background: #2c2c2c !important; /* Adding !important forces the browser to overwrite the default style applied by Bootstrap */
+        }
         .hover-effect {
         transition: transform 0.3s ease;
         }
@@ -85,14 +85,14 @@
         </div>
     </div>
     <nav class="nav-links navbar navbar-dark bg-dark">
-        <a class="nav-link" href="{% url 'AnimeInsightApp:home' %}">Home</a>
         <a class="nav-link" href="{% url 'AnimeInsightApp:view_history' %}">Watched</a>
         <a class="nav-link" href="#request">Request Anime Page</a>
         <a class="nav-link" href="{% url 'AnimeInsightApp:index' %}">Top Animes</a>
         <a class="nav-link" href="#genre">Genre Ranking</a>
         <a class="nav-link" href="{% url 'AnimeInsightApp:wishlist' %}">Wishlist</a>
+        <a class="nav-link" href="{% url 'AnimeInsightApp:about_us' %}">About us</a>
     </nav>
-    <div class="container">
+    <div class="container-fluid recommendations">
         {% block body %}
         {% endblock %}
     </div>
