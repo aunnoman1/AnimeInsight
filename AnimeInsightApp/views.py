@@ -30,6 +30,7 @@ def index(request):
             '''
              SELECT  Top 1000 * FROM Anime_Metadata
     WHERE Score >7.99
+    order by Score desc
             '''
         )
         anime_list = dictfetchall(cursor)
@@ -498,7 +499,8 @@ def search(request):
     return render(request, 'AnimeInsightApp/search.html',context=context)
     
     
-
+def about_us(request):
+    return render(request,'AnimeInsightApp/about_us.html')
     
     
     

@@ -11,7 +11,7 @@
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         grid-gap: 20px;
-        background-color: black; /* Add background color to the grid */
+        background: #2c2c2c !important; /* Adding !important forces the browser to overwrite the default style applied by Bootstrap */
         padding: 18px; /* Add padding to the grid */
     }
 
@@ -26,8 +26,7 @@
     }
 
    .history-item img {
-        width: 200px; /* adjust image size */
-        height: 210px;
+        
         object-fit: cover;
         border-radius: 10px;
     }
