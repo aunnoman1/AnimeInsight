@@ -1,4 +1,3 @@
-
 {% extends "AnimeInsightApp/layout.html" %}
 {% block body %}
 
@@ -12,17 +11,17 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
+            color:black;
             margin: 0;
             padding: 0;
         }
 
         .container {
-            max-width: 800px;
-            margin: 20px auto;
             padding: 20px;
-            background-color: #fff;
+            background-color:black;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color:white;
         }
 
         form {
@@ -38,6 +37,7 @@
             border-radius: 5px;
             border: 1px solid #ccc;
             margin-right: 10px;
+            margin-left:10px
         }
 
         button {
@@ -53,17 +53,25 @@
             background-color: darkred;
         }
 
-        ul {
-            list-style-type: none;
-            padding: 0;
+        .anime-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            color:black;
         }
 
-        li {
-            margin-bottom: 10px;
+        .anime-item {
+            width: calc(25% - 20px); /* 25% width for each item with 20px margin */
+            margin-bottom: 20px;
         }
 
         img {
+            width: 100%;
             border-radius: 5px;
+        }
+
+        .anime-item p {
+            
         }
     </style>
 </head>
@@ -72,7 +80,7 @@
 <div class="container">
     <form method="post" action="{% url 'AnimeInsightApp:filter_by_genre' %}">
         {% csrf_token %}
-        <label for="genre">Filter by Genre:</label>
+        <label for="genre">Filter by Genre: </label>
         <select name="genre" id="genre">
             <option value="">All Genres</option>
             {% for genre in genres %}
@@ -81,14 +89,16 @@
         </select>
         <button type="submit">Filter</button>
     </form>
+</div>
 
+<div class="container anime-container">
     {% if anime_list %}
-        <ul>
-            {% for anime in anime_list %}
-                <li>{{ anime.Name }}</li>
-                <li><img src="{{ anime.Image_URL }}" alt="{{ anime.name }}" width="100" height="150"></li>
-            {% endfor %}
-        </ul>
+        {% for anime in anime_list %}
+            <div class="anime-item">
+                <img src="{{ anime.Image_URL }}" alt="{{ anime.name }}">
+                <h5>{{ anime.Name }}</h5>
+            </div>
+        {% endfor %}
     {% else %}
         <p>No anime found.</p>
     {% endif %}
@@ -96,4 +106,5 @@
 
 </body>
 </html>
+
 {% endblock %}

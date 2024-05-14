@@ -18,12 +18,22 @@ import threading
 logger = logging.getLogger(__name__)
 
 
+
+#----------------------------WISHLIST|-|HISTORY-----------------------------#
+
 def index(request):
     with connection.cursor() as cursor:
         cursor.execute(
             '''
-             SELECT  Top 1000 * FROM Anime_Metadata
-    WHERE Score >7.99
+       SELECT * FROM (
+    SELECT TOP 1000 * FROM Anime_Metadata
+    WHERE Score > 7.09 AND ISNULL(Premiered, '') != '' AND CAST(RIGHT(Premiered, 4) AS INT) > 2020
+    ORDER BY Score DESC
+) AS Subquery
+ORDER BY Score DESC
+
+
+
             '''
         )
         anime_list = dictfetchall(cursor)
@@ -140,7 +150,6 @@ def clear_history(request):
 
     return redirect('AnimeInsightApp:view_history')
 
-# Other views...
 
 @login_required
 def add_to_wishlist(request, anime_id):
@@ -167,9 +176,12 @@ def add_to_wishlist(request, anime_id):
 
     return redirect('AnimeInsightApp:index')
 	
+ 
+ # -----------------------------------------------------------------------------#
+
+
 	
-	
-	
+	#-----------------------GENRE|-|RANKING-----------------------------#
 def filter_by_genre(request):
     selected_genre = request.POST.get('genre')
     
@@ -196,7 +208,7 @@ def filter_by_genre(request):
     return render(request, 'AnimeInsightApp/Genre.html', {'anime_list': anime_list, 'genres': sorted(genres)})
 
 
-
+#----------------------------------------------------------------------------------------------#
 
 
 
