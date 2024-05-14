@@ -84,7 +84,7 @@ DATABASES = {
         'NAME': 'AnimeInsight',
         'USER': 'sa',
         'PASSWORD': '12345678',
-        'HOST': 'DESKTOP-CTD6319\SQLEXPRESS',
+        'HOST': 'localhost',
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
             'Trusted_Connection': 'yes',
