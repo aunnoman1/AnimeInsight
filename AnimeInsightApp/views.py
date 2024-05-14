@@ -508,3 +508,28 @@ def about_us(request):
     
 #---------------------------------
 
+def filter_by_genre(request):
+    selected_genre = request.POST.get('genre')
+    
+    with connection.cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT Top 1000 * FROM Anime_Metadata
+            WHERE Score > 7.99
+            '''
+        )
+        anime_list = dictfetchall(cursor)
+
+    if selected_genre:
+        # Filter the fetched objects based on the selected genre
+        anime_list = [anime for anime in anime_list if anime['Genres'] and selected_genre in anime['Genres']]
+
+    # Extract the first genre from each row to populate the filter options
+    genres = set()
+    for anime in anime_list:
+        if anime['Genres']:
+            first_genre = anime['Genres'].split(',')[0].strip()
+            genres.add(first_genre)
+
+    return render(request, 'AnimeInsightApp/Genre.html', {'anime_list': anime_list, 'genres': sorted(genres)})
+		

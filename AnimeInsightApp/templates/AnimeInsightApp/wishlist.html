@@ -75,10 +75,10 @@
     <h1 class="one">Wishlist</h1>
 </div>
 <br>
-<div class="row justify-content-centre">
+<div class="wishlist-container">
     {% if wishlist %}
         {% for item in wishlist %}
-            <div class="col-md-4">
+            <div class="wishlist-item">
                 <img src="{{ item.3 }}" alt="{{ item.animeid.name }}">
                 <h3 class = 'text-white'>{{ item.2 }}</h3>
                 <p  class = 'text-white'>Score: {{ item.4|floatformat:"2" }}</p>
