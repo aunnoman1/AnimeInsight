@@ -15,7 +15,7 @@ import tensorflow as tf
 from joblib import load
 import threading
 from datetime import datetime
-import pdb
+from sklearn.metrics.pairwise import cosine_similarity
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +108,8 @@ def add_to_history(request, anime_id):
         if not Historywatch.objects.filter(userid=user_instance, animeid_id=anime_id).exists():
             Historywatch.objects.create(userid=user_instance, animeid_id=anime_id)
             messages.success(request, 'Anime added to history')
+            t= threading.Thread(target=recommend_anime,args=[request])
+            t.start()
         else:
             messages.info(request, 'Anime already in history')
     
@@ -321,7 +323,47 @@ def logout_request(request):
     # Redirect user back to course list view
     return redirect('AnimeInsightApp:login_request')
 
-        
+
+
+def get_embedding(anime_id):
+    cursor=connection.cursor()
+    cursor.execute("SELECT tensor_1 , tensor_2, tensor_3,tensor_4 , tensor_5, tensor_6,tensor_7 , tensor_8, tensor_9,tensor_10 , tensor_11, tensor_12,tensor_13 , tensor_14, tensor_15, tensor_16 FROM anime_tensors WHERE animeid = %s", [anime_id])
+    row = cursor.fetchone()
+    cursor.close()
+    if row:
+        return np.array(row)
+    else:
+        return None
+
+# Define function to find similar anime embeddings
+def find_similar_anime(anime_id, top_n=5):
+    # Retrieve the embedding of the given anime ID
+    query_embedding = get_embedding(anime_id)
+    if query_embedding is None:
+        print("Anime ID not found")
+        return
+    
+    # Retrieve all embeddings from the database
+    cursor=connection.cursor()
+    cursor.execute("SELECT * FROM anime_tensors where animeid != %s",[anime_id])
+    embeddings = []
+    anime_ids = []
+    for row in cursor.fetchall():
+        anime_ids.append(row[0])
+        embeddings.append(row[1:])
+    
+    # Compute cosine similarity between query_embedding and all other embeddings
+    similarities = cosine_similarity([query_embedding], embeddings)
+    
+    # Sort the results based on similarity
+    sorted_indices = np.argsort(similarities[0])[::-1]
+    
+    # Retrieve top N similar anime
+    top_n_similar = [anime_ids[idx] for idx in sorted_indices[:top_n]]
+    
+    return top_n_similar
+
+
 def recommend_anime(request):
     user_id=request.user.id
     user_mean_score= 8.0
@@ -340,18 +382,32 @@ def recommend_anime(request):
 
     # Step 2: Get the top 50 anime for each genre from the animemetadata table
     anime_list = []
-    for fav_genre in fav_genres:
-        cursor.execute("""
-            SELECT top 50 anime_id, Score,	Genres,	Type , Studios , Source
-            FROM Anime_Metadata
-            WHERE Genres LIKE %s
-            order by Score DESC
-        """, ['%' + fav_genre[0] + '%'])
-        anime_list.extend(cursor.fetchall())
-
     
+    cursor.execute('select animeid from historywatch where userid = %s',[request.user.id])
+    watched_animes=cursor.fetchall()
+
+    if len(watched_animes) < 3:
+        for fav_genre in fav_genres:
+            cursor.execute("""
+                SELECT top 2000 anime_id, Score,	Genres,	Type , Studios , Source
+                FROM Anime_Metadata
+                WHERE Genres LIKE %s
+                order by Score DESC
+            """, ['%' + fav_genre[0] + '%'])
+            anime_list.extend(cursor.fetchall())
+
+    for watched_anime in watched_animes:
+        similar_animes=find_similar_anime(watched_anime[0],2000)
+        for similar_anime in similar_animes:
+            cursor.execute("""
+                SELECT anime_id, Score,	Genres,	Type , Studios , Source
+                FROM Anime_Metadata
+                WHERE anime_id = %s
+            """, [similar_anime])
+            anime_list.append(cursor.fetchone())
+
     columns = [col[0] for col in cursor.description]
-    df = pd.DataFrame(anime_list, columns=columns)
+    df = pd.DataFrame(np.array(anime_list), columns=columns)
     df.drop_duplicates(inplace=True)
 
     # Step 3: Use the TensorFlow model to predict ratings for each anime
@@ -382,7 +438,7 @@ def recommend_anime(request):
     num_sources=len(source_vectorize_layer.get_vocabulary())
 
     
-    df.fillna({'Score':df['Score'].mean()},inplace=True)
+    df.fillna({'Score':df['Score'].astype(np.float32).mean()},inplace=True)
 
     df.loc[:,'Score']=score_scaler.transform(df[['Score']]).astype(np.float32)
 
@@ -463,10 +519,21 @@ def recommend_anime(request):
     
     # Step 4: Save the top 5 recommended anime for each genre in a new table
     sql_query = """
-    INSERT INTO Recommendation (userid, animeid1, animeid2, animeid3, animeid4, animeid5)
-    VALUES (%s, %s, %s, %s, %s, %s)
-"""
-    cursor.execute(sql_query, [user_id] + anime_ids)
+
+    if exists(select * from recommendation where userid=%s)
+    begin
+        update recommendation
+        set AnimeID1=%s,AnimeID2=%s,AnimeID3=%s,AnimeID4=%s,AnimeID5=%s
+        where userid=%s
+    end
+    else
+    begin
+        insert into recommendation
+        values
+        (%s,%s,%s,%s,%s,%s)
+    end
+    """
+    cursor.execute(sql_query, [user_id]+anime_ids+[user_id]+[user_id]+anime_ids)
 
     cursor.close()
     
@@ -510,26 +577,24 @@ def about_us(request):
 
 def filter_by_genre(request):
     selected_genre = request.POST.get('genre')
-    
+    if isinstance(selected_genre,str):
+        selected_genre='%'+selected_genre+'%'
     with connection.cursor() as cursor:
         cursor.execute(
             '''
             SELECT Top 1000 * FROM Anime_Metadata
-            WHERE Score > 7.99
-            '''
+            where genres like %s
+            order by Score desc
+            ''',[selected_genre]
         )
         anime_list = dictfetchall(cursor)
 
-    if selected_genre:
-        # Filter the fetched objects based on the selected genre
-        anime_list = [anime for anime in anime_list if anime['Genres'] and selected_genre in anime['Genres']]
+    # if selected_genre:
+    #     # Filter the fetched objects based on the selected genre
+    #     anime_list = [anime for anime in anime_list if anime['Genres'] and selected_genre in anime['Genres']]
 
     # Extract the first genre from each row to populate the filter options
-    genres = set()
-    for anime in anime_list:
-        if anime['Genres']:
-            first_genre = anime['Genres'].split(',')[0].strip()
-            genres.add(first_genre)
+    genres = [g[0] for g in FavGenres.genre.field.choices]
 
     return render(request, 'AnimeInsightApp/Genre.html', {'anime_list': anime_list, 'genres': sorted(genres)})
 		
