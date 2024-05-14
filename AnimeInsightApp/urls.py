@@ -18,6 +18,8 @@ urlpatterns = [
     path('add-to-history/<int:anime_id>/', views.add_to_history, name='add_to_history'),
     path('logout/', views.logout_request, name='logout_request'),
     path('search/',views.search,name='search'),
+    path('filter_by_genre/', views.filter_by_genre, name='filter_by_genre'),
+
     path('about_us/',views.about_us,name='about_us'),
   
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \

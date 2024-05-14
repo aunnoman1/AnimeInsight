@@ -84,16 +84,16 @@
     <h1>Trending Anime</h1>
 </div>
 <br>
-<div class="row  justify-content-centre">
+<div class="anime-container">
     {% for anime in anime_list %}
-    <div class="col-xl-3  justify-content-centre" style="color: white; font-family: sans-serif;">
+    <div class="anime-item" style="color: white; font-family: sans-serif;">
         <img src="{{ anime.Image_URL }}" alt="{{ anime.name }}" >
         <h4>{{ anime.Name }}</h4>
         <p color >Score: {{ anime.Score|floatformat:"2" }}</p>
         <form method="POST" action="{% url 'AnimeInsightApp:add_to_wishlist' anime_id=anime.anime_id %}">
             {% csrf_token %}
             <input type="hidden" name="anime_id" value="{{ anime.anime_id }}">
-            <button class= 'btn btn-secondary'type="submit">Add to Wishlist</button>
+            <button type="submit">Add to Wishlist</button>
             
         </form>
     </br>
@@ -101,8 +101,7 @@
             {% csrf_token %}
             <input type="hidden" name="anime_id" value="{{ anime.anime_id }}">
             
-            <button class = 'btn btn-secondary' type="submit" ><i class="fas fa-history" style="color: white;"></i></button>
-
+            <button type="submit" style="background-color:#333;"><i class="fas fa-history" style="color: white;"></i></button>
             
         </form>
     </div>

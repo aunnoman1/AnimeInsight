@@ -1,0 +1,110 @@
+{% extends "AnimeInsightApp/layout.html" %}
+{% block body %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Filter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color:black;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            padding: 20px;
+            background-color:black;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color:white;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+            margin-left:10px
+        }
+
+        button {
+            padding: 8px 20px;
+            background-color: red;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: darkred;
+        }
+
+        .anime-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            color:black;
+        }
+
+        .anime-item {
+            width: calc(25% - 20px); /* 25% width for each item with 20px margin */
+            margin-bottom: 20px;
+        }
+
+        img {
+            width: 100%;
+            border-radius: 5px;
+        }
+
+        .anime-item p {
+            
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <form method="post" action="{% url 'AnimeInsightApp:filter_by_genre' %}">
+        {% csrf_token %}
+        <label for="genre">Filter by Genre: </label>
+        <select name="genre" id="genre">
+            <option value="">All Genres</option>
+            {% for genre in genres %}
+                <option value="{{ genre }}">{{ genre }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Filter</button>
+    </form>
+</div>
+
+<div class="container anime-container">
+    {% if anime_list %}
+        {% for anime in anime_list %}
+            <div class="anime-item">
+                <img src="{{ anime.Image_URL }}" alt="{{ anime.name }}">
+                <h5>{{ anime.Name }}</h5>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No anime found.</p>
+    {% endif %}
+</div>
+
+</body>
+</html>
+
+{% endblock %}
