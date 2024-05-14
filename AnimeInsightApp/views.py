@@ -453,7 +453,7 @@ def recommend_anime(request):
     output=model(input)
     output = rating_scaler.inverse_transform(output)
 
-    output_df = pd.DataFrame(output,columns=['rating'])
+    output_df = pd.DataFrame(output,columns=['rating'],index=df.index)
 
 
     final_df =pd.concat([df['anime_id'], output_df], axis=1)
