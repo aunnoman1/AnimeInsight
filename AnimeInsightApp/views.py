@@ -621,7 +621,18 @@ def one_anime_page(request, anime_id):
     with connection.cursor() as cursor:
         cursor.execute("SELECT username FROM AnimeInsightApp_user join Review_Rating on Review_Rating.user_id=AnimeInsightApp_user.id where anime_id = %s", [anime_id])
         usr = cursor.fetchall()
-    return render(request, 'AnimeInsightApp/oneanimepage.html', {'anime': anime, 'reviews': reviews, 'usr':usr})
+
+    
+    similar_animes=find_similar_anime(anime_id,5)
+    animes=[]
+    with connection.cursor() as cursor:
+        for similar_anime in similar_animes:
+            cursor.execute("SELECT anime_id , Name , Image_URL FROM anime_metadata WHERE anime_id = %s",[similar_anime])
+            animeinfo=cursor.fetchone()
+            animes.append(animeinfo)
+
+    
+    return render(request, 'AnimeInsightApp/oneanimepage.html', {'anime': anime, 'reviews': reviews, 'usr':usr,'animes':animes})
     
 
 
