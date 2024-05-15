@@ -43,9 +43,9 @@
         }
         .cover {
             width: 100%;
-            height: 450px;
+            height: 650px;
             background-image: url('{{ anime.19 }}'); /* Use the anime image URL here */
-            background-size: cover;
+            background-size: 100% 100%;
             background-position: center;
             margin-bottom: 20px;
         }
@@ -87,6 +87,15 @@
         .option-image:hover {
             transform: scale(1.1);
         }
+    
+        .recommendations {
+            background-color: #2c2c2c; /* Dark gray color */
+            padding: 20px;
+            text-align: center;
+        }
+        h4 {
+            text-decoration: underline;
+            }
     </style>
 </head>
 <body>
@@ -97,17 +106,17 @@
         <div class="info-box">
             <div class="cover"></div>
             <h1>{{ anime.1 }}</h1> <!-- Use the anime name here -->
-            <p>Description: {{ anime.5 }}</p> <!-- Use the anime synopsis here -->
-            <p class="genres">Genres: {{ anime.4 }}</p> <!-- Use the anime genres here -->
-            <p>Rating: {{ anime.16}}</p> <!-- Use the anime age rating here -->
-            <p>Duration: {{ anime.15 }}</p> <!-- Use the anime duration here -->
-            <p>Episodes: {{ anime.7 }}</p> <!-- Use the anime episodes count here -->
-            <p>Aired: {{ anime.8 }}</p> <!-- Use the anime aired date here -->
-            <p>Premiered: {{ anime.9 }}</p> <!-- Use the anime premiered date here -->
-            <p>Producers: {{ anime.11}}</p> <!-- Use the anime producers here -->
-            <p>Licensers: {{ anime.12 }}</p> <!-- Use the anime licensors here -->
-            <p>Studio: {{ anime.13 }}</p> <!-- Use the anime studios here -->
-            <p>Source: {{ anime.14 }}</p> <!-- Use the anime source here -->
+            <h4>Description:</h4><p> {{ anime.5 }}</p> <!-- Use the anime synopsis here -->
+            <h4 class="genres">Genres:</h4><p> {{ anime.4 }}</p> <!-- Use the anime genres here -->
+            <h4>Rating:</h4><p> {{ anime.16}}</p> <!-- Use the anime age rating here -->
+            <h4>Duration:</h4><p> {{ anime.15 }}</p> <!-- Use the anime duration here -->
+            <h4>Episodes:</h4><p> {{ anime.7 }}</p> <!-- Use the anime episodes count here -->
+            <h4>Aired:</h4><p> {{ anime.8 }}</p> <!-- Use the anime aired date here -->
+            <h4>Premiered:</h4><p> {{ anime.9 }}</p> <!-- Use the anime premiered date here -->
+            <h4>Producers:</h4><p> {{ anime.11}}</p> <!-- Use the anime producers here -->
+            <h4>Licensers:</h4><p> {{ anime.12 }}</p> <!-- Use the anime licensors here -->
+            <h4>Studio:</h4><p> {{ anime.13 }}</p> <!-- Use the anime studios here -->
+            <h4>Source:</h4><p> {{ anime.14 }}</p> <!-- Use the anime source here -->
         </div>
         <div class="reviews-box">
             <p>Reviews:</p>
@@ -152,6 +161,33 @@
                 <button type="submit">Submit Review</button>
             </form>
         </div>
+    </div>
+    <div class="container-fluid recommendations">
+        {% if animes %}
+        <h2 class="text-white">Similar Anime</h2>
+        <div class="row  justify-content-around">
+            {% for anime in animes %}
+            <div class="col-xl mb-5 anime-item" >
+                <a href="{% url 'AnimeInsightApp:one_anime_page' anime_id=anime.0 %}"data-toggle="popover" data-trigger="hover"  data-content="{{ anime.1 }}" data-placement="bottom">
+                    <img src="{{ anime.2 }}" alt="{{ anime.1 }}" class="img-fluid hover-effect">
+
+                </a>
+            </div>
+            
+
+            {% endfor %}
+            
+        </div>
+        {% else %}
+        <h2 class="text-white">Generating Recommendations...</h2>
+        {% endif %}
+
+    </div>
+    <script>
+        $(document).ready(function(){
+            $('[data-toggle="popover"]').popover();
+        });
+   </script>
     </div>
 </body>
 </html>
