@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login , logout
 from django.shortcuts import redirect
-from django.db import connection
+from django.db import connection,IntegrityError
 from django.conf import settings
 from .models import User, FavGenres, Profile, Wishlist, AnimeMetadata,Historywatch
 from django.contrib import messages
@@ -216,7 +216,7 @@ def home(request):
     if request.method=='GET':
         cursor = connection.cursor()
         context['animes']=[]
-        cursor.execute("select AnimeID1 , AnimeID2 , AnimeID3 , AnimeID4 , AnimeID5  from recommendation where userID = %s",[request.user.id])
+        cursor.execute("select AnimeID1 , AnimeID2 , AnimeID3 , AnimeID4 , AnimeID5 , AnimeID6 , AnimeID7 , AnimeID8 , AnimeID9 , AnimeID10  from recommendation where userID = %s",[request.user.id])
         animeids=cursor.fetchone()
         if isinstance(animeids,tuple):
             for animeid in animeids:
@@ -385,7 +385,7 @@ def recommend_anime(request):
     
     cursor.execute('select animeid from historywatch where userid = %s',[request.user.id])
     watched_animes=cursor.fetchall()
-
+    watched_animes=[watched_anime[0] for watched_anime in watched_animes]
     if len(watched_animes) < 3:
         for fav_genre in fav_genres:
             cursor.execute("""
@@ -397,7 +397,7 @@ def recommend_anime(request):
             anime_list.extend(cursor.fetchall())
 
     for watched_anime in watched_animes:
-        similar_animes=find_similar_anime(watched_anime[0],2000)
+        similar_animes=find_similar_anime(watched_anime,2000)
         for similar_anime in similar_animes:
             cursor.execute("""
                 SELECT anime_id, Score,	Genres,	Type , Studios , Source
@@ -405,10 +405,11 @@ def recommend_anime(request):
                 WHERE anime_id = %s
             """, [similar_anime])
             anime_list.append(cursor.fetchone())
-
     columns = [col[0] for col in cursor.description]
     df = pd.DataFrame(np.array(anime_list), columns=columns)
     df.drop_duplicates(inplace=True)
+    df=df[~df['anime_id'].isin(watched_animes)]
+    df=df[~(df['Type']=='Music')]
 
     # Step 3: Use the TensorFlow model to predict ratings for each anime
     model_path=os.path.join(settings.MODELS,'merged_model.keras')
@@ -513,7 +514,7 @@ def recommend_anime(request):
 
 
     final_df =pd.concat([df['anime_id'], output_df], axis=1)
-    final_df=final_df.nlargest(5,'rating')
+    final_df=final_df.nlargest(10,'rating')
 
     anime_ids=final_df['anime_id'].tolist()
     
@@ -523,14 +524,14 @@ def recommend_anime(request):
     if exists(select * from recommendation where userid=%s)
     begin
         update recommendation
-        set AnimeID1=%s,AnimeID2=%s,AnimeID3=%s,AnimeID4=%s,AnimeID5=%s
+        set AnimeID1=%s,AnimeID2=%s,AnimeID3=%s,AnimeID4=%s,AnimeID5=%s,AnimeID6=%s,AnimeID7=%s,AnimeID8=%s,AnimeID9=%s,AnimeID10=%s
         where userid=%s
     end
     else
     begin
         insert into recommendation
         values
-        (%s,%s,%s,%s,%s,%s)
+        (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     end
     """
     cursor.execute(sql_query, [user_id]+anime_ids+[user_id]+[user_id]+anime_ids)
@@ -598,3 +599,11 @@ def filter_by_genre(request):
 
     return render(request, 'AnimeInsightApp/Genre.html', {'anime_list': anime_list, 'genres': sorted(genres)})
 		
+def request_anime(request):
+    if request.method == 'POST':
+        name=request.POST['name']
+        cursor=connection.cursor()
+        cursor.execute('insert into request values (%s,%s)',[request.user.id,name])
+        cursor.close()
+        return redirect('AnimeInsightApp:request_anime')
+    return render(request, 'AnimeInsightApp/request_anime.html')

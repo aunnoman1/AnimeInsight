@@ -5,9 +5,9 @@
     
         {% if animes %}
         <h2 class="text-white">Your Recommendations</h2>
-        <div class="row recommendation-images">
+        <div class="row  justify-content-around">
             {% for anime in animes %}
-            <div class="col-xl">
+            <div class="col-xl-3 mb-5 anime-item" >
                 <a href="#"data-toggle="popover" data-trigger="hover"  data-content="{{ anime.1 }}" data-placement="bottom">
                     <img src="{{ anime.2 }}" alt="{{ anime.1 }}" class="img-fluid hover-effect">
 
