@@ -607,3 +607,45 @@ def request_anime(request):
         cursor.close()
         return redirect('AnimeInsightApp:request_anime')
     return render(request, 'AnimeInsightApp/request_anime.html')
+
+
+def one_anime_page(request, anime_id):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM Anime_Metadata WHERE anime_id = %s", [anime_id])
+        anime = cursor.fetchone()
+    
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT rev,rate FROM Review_Rating WHERE anime_id = %s", [anime_id])
+        reviews = cursor.fetchall()
+
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT username FROM AnimeInsightApp_user join Review_Rating on Review_Rating.user_id=AnimeInsightApp_user.id where anime_id = %s", [anime_id])
+        usr = cursor.fetchall()
+    return render(request, 'AnimeInsightApp/oneanimepage.html', {'anime': anime, 'reviews': reviews, 'usr':usr})
+    
+
+
+def add_review(request, anime_id):
+    if request.method == 'POST':
+        user_instance = request.user
+        review_text = request.POST.get('review_text')
+        rating = request.POST.get('rating')
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM Review_Rating WHERE user_id = %s AND anime_id = %s", [user_instance.id, anime_id])
+            review_count = cursor.fetchone()[0]
+        if review_count > 0:
+            with connection.cursor() as cursor:
+                sql_query = """
+                    UPDATE Review_Rating
+                    SET rev = %s, rate = %s
+                    WHERE user_id = %s AND anime_id = %s;
+                """
+                cursor.execute(sql_query, [review_text, rating, user_instance.id, anime_id])
+        else:
+            with connection.cursor() as cursor:
+                sql_query = """
+                    INSERT INTO Review_Rating (user_id, anime_id, rev, rate)
+                    VALUES (%s, %s, %s, %s);
+                """
+                cursor.execute(sql_query, [user_instance.id, anime_id, review_text, rating])
+        return redirect('AnimeInsightApp:one_anime_page',anime_id)

@@ -21,6 +21,8 @@ urlpatterns = [
     path('filter_by_genre/', views.filter_by_genre, name='filter_by_genre'),
     path('about_us/',views.about_us,name='about_us'),
     path('request/',views.request_anime,name='request_anime'),
+    path('anime/<int:anime_id>/', views.one_anime_page, name='one_anime_page'),
+    path('add_review/<int:anime_id>/', views.add_review, name='add_review'),
  
   
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \
