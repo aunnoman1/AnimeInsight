@@ -71,7 +71,11 @@ class Recommendation(models.Model):
     animeid3 = models.ForeignKey(AnimeMetadata, models.CASCADE, db_column='AnimeID3', related_name='recommendation_animeid3_set', blank=True, null=True)  # Field name made lowercase.
     animeid4 = models.ForeignKey(AnimeMetadata, models.CASCADE, db_column='AnimeID4', related_name='recommendation_animeid4_set', blank=True, null=True)  # Field name made lowercase.
     animeid5 = models.ForeignKey(AnimeMetadata, models.CASCADE, db_column='AnimeID5', related_name='recommendation_animeid5_set', blank=True, null=True)  # Field name made lowercase.
-
+    animeid6 = models.ForeignKey(AnimeMetadata, models.DO_NOTHING, db_column='AnimeID6', related_name='recommendation_animeid6_set', blank=True, null=True)  # Field name made lowercase.
+    animeid7 = models.ForeignKey(AnimeMetadata, models.DO_NOTHING, db_column='AnimeID7', related_name='recommendation_animeid7_set', blank=True, null=True)  # Field name made lowercase.
+    animeid8 = models.ForeignKey(AnimeMetadata, models.DO_NOTHING, db_column='AnimeID8', related_name='recommendation_animeid8_set', blank=True, null=True)  # Field name made lowercase.
+    animeid9 = models.ForeignKey(AnimeMetadata, models.DO_NOTHING, db_column='AnimeID9', related_name='recommendation_animeid9_set', blank=True, null=True)  # Field name made lowercase.
+    animeid10 = models.ForeignKey(AnimeMetadata, models.DO_NOTHING, db_column='AnimeID10', related_name='recommendation_animeid10_set', blank=True, null=True)  # Field name made lowercase.
     class Meta:
         managed = False
         db_table = 'recommendation'

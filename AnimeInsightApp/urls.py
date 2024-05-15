@@ -19,8 +19,9 @@ urlpatterns = [
     path('logout/', views.logout_request, name='logout_request'),
     path('search/',views.search,name='search'),
     path('filter_by_genre/', views.filter_by_genre, name='filter_by_genre'),
-
     path('about_us/',views.about_us,name='about_us'),
+    path('request/',views.request_anime,name='request_anime'),
+ 
   
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \
   + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -1,0 +1,23 @@
+{% extends "AnimeInsightApp/layout.html" %}
+{% block title %}Request anime{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="row justify-content-around">
+        <div class="col-xl-8 justify-content-around">
+            <h1 class="text-white">Request to Add Anime</h2>
+            <br>
+            <h5 class="text-white">Use the form below to request the addition of an anime to our website.</h5>
+            <br>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="name"  class="text-white">Anime Name:</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+                <button type="submit" class="btn btn-secondary">Submit Request</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
