@@ -87,7 +87,9 @@
 <div class="anime-container">
     {% for anime in anime_list %}
     <div class="anime-item" style="color: white; font-family: sans-serif;">
-        <img src="{{ anime.Image_URL }}" alt="{{ anime.name }}" >
+        <a href="{% url 'AnimeInsightApp:one_anime_page' anime_id=anime.anime_id %}" data-toggle="popover" data-trigger="hover" data-content="{{ anime.1 }}" data-placement="bottom">
+            <img src="{{ anime.Image_URL }}" alt="{{ anime.name }}" class="img-fluid hover-effect">
+        </a>
         <h4>{{ anime.Name }}</h4>
         <p color >Score: {{ anime.Score|floatformat:"2" }}</p>
         <form method="POST" action="{% url 'AnimeInsightApp:add_to_wishlist' anime_id=anime.anime_id %}">
