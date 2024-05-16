@@ -429,13 +429,13 @@ def recommend_anime(request):
     
 
     studio_vectorize_layer_model=tf.keras.models.load_model(preprocesing_path+'/studio_vectorize_layer_model')
-    studio_vectorize_layer = studio_vectorize_layer_model.layers[0]
+    studio_vectorize_layer = studio_vectorize_layer_model.get_layer(index=0)
     num_studios=len(studio_vectorize_layer.get_vocabulary())
     genre_vectorize_layer_model=tf.keras.models.load_model(preprocesing_path+'/genre_vectorize_layer_model')
-    genre_vectorize_layer = genre_vectorize_layer_model.layers[0]
+    genre_vectorize_layer = genre_vectorize_layer_model.get_layer(index=0)
     num_genres=len(genre_vectorize_layer.get_vocabulary())
     source_vectorize_layer_model=tf.keras.models.load_model(preprocesing_path+'/source_vectorize_layer_model')
-    source_vectorize_layer = source_vectorize_layer_model.layers[0]
+    source_vectorize_layer = source_vectorize_layer_model.get_layer(index=0)
     num_sources=len(source_vectorize_layer.get_vocabulary())
 
     
@@ -662,42 +662,82 @@ def add_review(request, anime_id):
         return redirect('AnimeInsightApp:one_anime_page',anime_id)
     
 
+
 @login_required
 def edit_profile(request):
+    context = {}
     user = request.user
-    favorite_genres = FavGenres.objects.filter(userid_id=user)
+    profile = user.profile
 
-    if request.method == 'POST':
-        # Handle form submission
-        username = request.POST['username']
+    if request.method == "POST":
+        print("POST request received")
+        print(request.POST)  # Debug: Print all POST data
+
+        username = request.POST.get('username')
         first_name = request.POST['first_name']
         last_name = request.POST['last_name']
-        dob = request.POST['dob']
-        email = request.POST['email']
-        genres = request.POST.getlist('favorite_genres')
+        email = request.POST.get('email')
+        date_of_birth = request.POST['date_of_birth']
         gender = request.POST['gender']
+        selected_genres = request.POST.getlist('genres')
 
-        # Update user profile
-        user.username = username
+        # Check for username uniqueness if it has changed
+        if username != user.username:
+            if User.objects.filter(username=username).exists():
+                context['error_message'] = 'Username already exists. Please choose a different one.'
+                context['genres'] = FavGenres.genre.field.choices
+                context['genders'] = Profile.gender.field.choices
+                return render(request, 'AnimeInsightApp/edit_profile.html', context)
+
+        # Check for email uniqueness if it has changed
+        if email and email != user.email:
+            if User.objects.filter(email=email).exists():
+                context['error_message'] = 'Email already in use. Please choose a different one.'
+                context['genres'] = FavGenres.genre.field.choices
+                context['genders'] = Profile.gender.field.choices
+                return render(request, 'AnimeInsightApp/edit_profile.html', context)
+
+        # Update user information
+        user.username = username if username else user.username
         user.first_name = first_name
         user.last_name = last_name
-        user.dob = dob
-        user.email = email
-        user.gender = gender
+        user.email = email if email else user.email
         user.save()
 
-        # Update favorite genres
-        user.favgeners_set.clear()
-        for genre_id in genres:
-            genre = FavGenres.objects.get(id=genre_id)
-            user.FavGenres_set.add(genre)
+        # Handle favorite genres
+        user_favorite_genres = [fav.genre for fav in FavGenres.objects.filter(userid=user)]
+        
+        # Add new favorite genres
+        for genre in selected_genres:
+            if genre not in user_favorite_genres:
+                FavGenres.objects.create(userid=user, genre=genre)
+            else:
+                user_favorite_genres.remove(genre)
 
-        return redirect('AnimeInsightApp:home')  # Redirect to profile page after updating
+        # Remove unselected genres
+        for genre in user_favorite_genres:
+            FavGenres.objects.filter(userid=user, genre=genre).delete()
 
-    context = {
-        'user': user,  # Pass the user object to pre-fill the form
-        'favorite_genres': favorite_genres,
-        'all_genres': FavGenres.objects.all()
-    }
+        # Update profile information
+        profile.dob = date_of_birth
+        profile.registered = True
+        profile.gender = gender
+        profile.save()
+
+        # Start the recommendation thread
+        t = threading.Thread(target=recommend_anime, args=[user])
+        t.start()
+
+        return redirect('AnimeInsightApp:home')
+
+    else:
+        context['user'] = user
+        context['profile'] = profile
+        context['genres'] = FavGenres.genre.field.choices
+        context['genders'] = Profile.gender.field.choices
+
+        # Get user's favorite genres
+        user_favorite_genres = [fav.genre for fav in FavGenres.objects.filter(userid=user)]
+        context['user_favorite_genres'] = user_favorite_genres
 
     return render(request, 'AnimeInsightApp/edit_profile.html', context)
