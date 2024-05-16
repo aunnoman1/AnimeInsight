@@ -8,7 +8,7 @@
         <div class="row no-gutters recommendation-images">
             {% for anime in animes %}
             <div class="col-md-2">
-                <a href="#"data-toggle="popover" data-trigger="hover"  data-content="{{ anime.1 }}" data-placement="bottom">
+                <a href="{% url 'AnimeInsightApp:one_anime_page' anime_id=anime.0 %}"data-toggle="popover" data-trigger="hover"  data-content="{{ anime.1 }}" data-placement="bottom">
                     <img src="{{ anime.2 }}" alt="{{anime.1}}" class="img-fluid hover-effect">
 
                 </a>
