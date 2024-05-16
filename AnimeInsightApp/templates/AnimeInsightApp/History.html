@@ -119,9 +119,11 @@
     {% if history %}
         {% for item in history %}
             <div class="history-item">
-                <img src="{{ item.3 }}" alt="Image of {{ item.2 }}">
+                <a href="{% url 'AnimeInsightApp:one_anime_page' anime_id=item.1 %}"data-toggle="popover" data-trigger="hover"  data-content="{{ item.2 }}" data-placement="bottom">
+                    <img src="{{ item.3 }}" alt="{{ item.2 }}" class="img-fluid hover-effect">
+                </a>
                 <h3>{{ item.2 }}</h3>
-                <p>Watched on: {{ item.4 }}</p>
+                
             </div>
             {% if forloop.counter|divisibleby:4 %}
                 <!-- Add a break after 4 items -->
@@ -132,4 +134,5 @@
         <p>No watch history found.</p>
     {% endif %}
 </div>
+
 {% endblock %}
