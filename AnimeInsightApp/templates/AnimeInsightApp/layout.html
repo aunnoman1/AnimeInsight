@@ -63,7 +63,7 @@
         <div class="container-fluid">
             <div class="row align-items-center justify-content-between">
                 <div class="col-md-1">
-                    <a href="{% url 'AnimeInsightApp:home' %}"><img src="{% static 'logo1.png' %}" alt="Anime Recommendation Logo" class="img-fluid"></a>
+                    <a href="{% url 'AnimeInsightApp:home' %}"><img src="{% static 'logo1.png' %}" alt="Anime Recommendation Logo" class="img-fluid  border border-secondary"></a>
                 </div>
                 <div class="col-md-4">
                     <div class="input-group">
@@ -88,7 +88,7 @@
     </div>
     <nav class="nav-links navbar navbar-dark bg-dark">
         <a class="nav-link" href="{% url 'AnimeInsightApp:view_history' %}">Watched</a>
-        <a class="nav-link" href="#request">Request Anime Page</a>
+        <a class="nav-link" href="{% url 'AnimeInsightApp:request_anime' %}">Request Anime Page</a>
         <a class="nav-link" href="{% url 'AnimeInsightApp:index' %}">Top Animes</a>
         <a class="nav-link" href="{% url 'AnimeInsightApp:filter_by_genre' %}">Genre Ranking</a>
         <a class="nav-link" href="{% url 'AnimeInsightApp:wishlist' %}">Wishlist</a>
