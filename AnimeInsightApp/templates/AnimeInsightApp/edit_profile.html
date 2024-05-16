@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - Anime Insights</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #222;
+            color: #FFF;
+        }
+
+        .header {
+            background-color: #BC0000;
+            color: #FFF;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 50px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #444;
+            border-radius: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 5px;
+            }
+
+            .form-group input[type="text"],
+            .form-group input[type="email"],
+            .form-group textarea,
+            .form-group input[type="date"] {
+                width: 100%;
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
+                background-color: #333;
+                color: #FFF;
+                box-sizing: border-box;
+                margin-top: 5px;
+            }
+
+            .form-group textarea {
+                resize: none;
+                height: 100px;
+            }
+
+            .form-group input[type="submit"] {
+                background-color: #BC0000;
+                color: #FFF;
+                border: none;
+                border-radius: 5px;
+                padding: 10px 20px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+
+                .form-group input[type="submit"]:hover {
+                    background-color: #FF0000;
+                }
+
+        .genre-list {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+            .genre-list li {
+                display: inline-block;
+                margin-right: 10px;
+            }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <a href="home.html"><img src="logo.png" alt="Anime Insights Logo"></a>
+        </div>
+    </div>
+    <div class="container">
+        <h2>Edit Profile</h2>
+        <form action="#" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" value="{{ user.username }}" required>
+            </div>
+            <div class="form-group">
+                <label for="first_name">First Name</label>
+                <input type="text" id="first_name" name="first_name" placeholder="Enter your first name" value="{{ user.first_name }}" required>
+            </div>
+            <div class="form-group">
+                <label for="last_name">Last Name</label>
+                <input type="text" id="last_name" name="last_name" placeholder="Enter your last name" value="{{ user.last_name }}" required>
+            </div>
+            <div class="form-group">
+                <label for="dob">Date of Birth</label>
+                <input type="date" id="dob" name="dob" value="{{ user.dob }}" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" value="{{ user.email }}" required>
+            </div>
+            <div class="form-group">
+                <label for="favorite_genres">Favorite Genres</label>
+                <ul class="genre-list">
+                    {% for genre in all_genres %}
+                    <li>
+                        <input type="checkbox" id="genre_{{ genre.id }}" name="favorite_genres" value="{{ genre.id }}"
+                               {% if genre.id in favorite_genres_dict %} checked {% endif %}>
+                        <label for="genre_{{ genre.id }}">{{ genre.name }}</label>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <select id="gender" name="gender" required aria-label="Gender" aria-describedby="gender-help">
+                    <option value="">Select a gender</option>
+                    <option value="male" {% if user.gender == 'male' %}selected{% endif %}>Male</option>
+                    <option value="female" {% if user.gender == 'female' %}selected{% endif %}>Female</option>
+                    <option value="other" {% if user.gender == 'other' %}selected{% endif %}>Other</option>
+                </select>
+                <span id="gender-help">Select your gender</span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Update Profile">
+            </div>
+        </form>
+    </div>
+</body>
+</html>

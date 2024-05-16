@@ -23,6 +23,7 @@ urlpatterns = [
     path('request/',views.request_anime,name='request_anime'),
     path('anime/<int:anime_id>/', views.one_anime_page, name='one_anime_page'),
     path('add_review/<int:anime_id>/', views.add_review, name='add_review'),
+    path('profile/', views.edit_profile, name='edit_profile'),
  
   
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \

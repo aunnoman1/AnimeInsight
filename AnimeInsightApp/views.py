@@ -660,3 +660,44 @@ def add_review(request, anime_id):
                 """
                 cursor.execute(sql_query, [user_instance.id, anime_id, review_text, rating])
         return redirect('AnimeInsightApp:one_anime_page',anime_id)
+    
+
+@login_required
+def edit_profile(request):
+    user = request.user
+    favorite_genres = FavGenres.objects.filter(userid_id=user)
+
+    if request.method == 'POST':
+        # Handle form submission
+        username = request.POST['username']
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+        dob = request.POST['dob']
+        email = request.POST['email']
+        genres = request.POST.getlist('favorite_genres')
+        gender = request.POST['gender']
+
+        # Update user profile
+        user.username = username
+        user.first_name = first_name
+        user.last_name = last_name
+        user.dob = dob
+        user.email = email
+        user.gender = gender
+        user.save()
+
+        # Update favorite genres
+        user.favgeners_set.clear()
+        for genre_id in genres:
+            genre = FavGenres.objects.get(id=genre_id)
+            user.FavGenres_set.add(genre)
+
+        return redirect('AnimeInsightApp:home')  # Redirect to profile page after updating
+
+    context = {
+        'user': user,  # Pass the user object to pre-fill the form
+        'favorite_genres': favorite_genres,
+        'all_genres': FavGenres.objects.all()
+    }
+
+    return render(request, 'AnimeInsightApp/edit_profile.html', context)
