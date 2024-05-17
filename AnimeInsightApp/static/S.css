@@ -38,7 +38,7 @@
   .wishlist-item button {
     display: inline-block;
     background-color:white; /* Green background color */
-    color: white; /* White text color */
+    color: black; /* White text color */
     padding: 10px 20px; /* Add padding */
     border: none; /* Remove border */
     border-radius: 5px; /* Add rounded corners */

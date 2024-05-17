@@ -95,7 +95,9 @@
     {% if anime_list %}
         {% for anime in anime_list %}
             <div class="anime-item">
-                <img src="{{ anime.Image_URL }}" alt="{{ anime.name }}">
+             <a href="{% url 'AnimeInsightApp:one_anime_page' anime_id=anime.anime_id %}" data-toggle="popover" data-trigger="hover" data-content="{{ anime.1 }}" data-placement="bottom">
+                <img src="{{ anime.Image_URL }}" alt="{{ anime.name }}" class="img-fluid hover-effect">
+            </a>
                 <h5>{{ anime.Name }}</h5>
             </div>
         {% endfor %}

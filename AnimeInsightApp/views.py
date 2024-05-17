@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login , logout
 from django.shortcuts import redirect
-from django.db import connection
+from django.db import connection,IntegrityError
 from django.conf import settings
 from .models import User, FavGenres, Profile, Wishlist, AnimeMetadata,Historywatch
 from django.contrib import messages
@@ -15,7 +15,7 @@ import tensorflow as tf
 from joblib import load
 import threading
 from datetime import datetime
-import pdb
+from sklearn.metrics.pairwise import cosine_similarity
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def index(request):
     with connection.cursor() as cursor:
         cursor.execute(
             '''
-             SELECT  Top 1000 * FROM Anime_Metadata
+             SELECT  Top 300 * FROM Anime_Metadata
     WHERE Score >7.99
     order by Score desc
             '''
@@ -96,8 +96,7 @@ def remove_from_wishlist(request, anime_id):
         else:
             messages.error(request, 'Anime not found in wishlist')
     return redirect('AnimeInsightApp:wishlist')
-
-#----
+#-------------------------------
 @login_required
 def add_to_history(request, anime_id):
     if request.method == 'POST':
@@ -105,15 +104,27 @@ def add_to_history(request, anime_id):
         
         anime_id = int(anime_id)
         
-        if not Historywatch.objects.filter(userid=user_instance, animeid_id=anime_id).exists():
-            Historywatch.objects.create(userid=user_instance, animeid_id=anime_id)
-            messages.success(request, 'Anime added to history')
-        else:
-            messages.info(request, 'Anime already in history')
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*) FROM historywatch 
+                WHERE userid = %s AND animeid = %s
+            """, [user_instance.id, anime_id])
+            row_count = cursor.fetchone()[0]
+
+            if row_count == 0:
+                cursor.execute("""
+                    INSERT INTO historywatch (userid, animeid)
+                    VALUES (%s, %s)
+                """, [user_instance.id, anime_id])
+                messages.success(request, 'Anime added to history')
+                
+                t = threading.Thread(target=recommend_anime, args=[request])
+                t.start()
+            else:
+                messages.info(request, 'Anime already in history')
     
     return redirect('AnimeInsightApp:index')
-
-
+#---------------------------#
 @login_required
 def view_history(request):
     user_instance = request.user
@@ -177,22 +188,7 @@ def add_to_wishlist(request, anime_id):
 	
 	
 	
-def namegenre_anime(request):
-    # Get the values from the request's GET parameters
-    name = request.GET.get('name')
-    genre = request.GET.get('genre')
 
-    # Filter anime by name and genre if provided, otherwise get all anime
-    if name and genre:
-        anime_list = AnimeMetadata.objects.filter(name__icontains=name, genre=genre)
-    elif name:
-        anime_list = AnimeMetadata.objects.filter(name__icontains=name)
-    elif genre:
-        anime_list = AnimeMetadata.objects.filter(genre=genre)
-    else:
-        anime_list = AnimeMetadata.objects.all()
-
-    return render(request, 'AnimeInsightApp/History.html', {'anime_list': anime_list, 'name': name, 'genre': genre})
 
 
 
@@ -214,7 +210,7 @@ def home(request):
     if request.method=='GET':
         cursor = connection.cursor()
         context['animes']=[]
-        cursor.execute("select AnimeID1 , AnimeID2 , AnimeID3 , AnimeID4 , AnimeID5  from recommendation where userID = %s",[request.user.id])
+        cursor.execute("select AnimeID1 , AnimeID2 , AnimeID3 , AnimeID4 , AnimeID5 , AnimeID6 , AnimeID7 , AnimeID8 , AnimeID9 , AnimeID10  from recommendation where userID = %s",[request.user.id])
         animeids=cursor.fetchone()
         if isinstance(animeids,tuple):
             for animeid in animeids:
@@ -321,7 +317,47 @@ def logout_request(request):
     # Redirect user back to course list view
     return redirect('AnimeInsightApp:login_request')
 
-        
+
+
+def get_embedding(anime_id):
+    cursor=connection.cursor()
+    cursor.execute("SELECT tensor_1 , tensor_2, tensor_3,tensor_4 , tensor_5, tensor_6,tensor_7 , tensor_8, tensor_9,tensor_10 , tensor_11, tensor_12,tensor_13 , tensor_14, tensor_15, tensor_16 FROM anime_tensors WHERE animeid = %s", [anime_id])
+    row = cursor.fetchone()
+    cursor.close()
+    if row:
+        return np.array(row)
+    else:
+        return None
+
+# Define function to find similar anime embeddings
+def find_similar_anime(anime_id, top_n=5):
+    # Retrieve the embedding of the given anime ID
+    query_embedding = get_embedding(anime_id)
+    if query_embedding is None:
+        print("Anime ID not found")
+        return
+    
+    # Retrieve all embeddings from the database
+    cursor=connection.cursor()
+    cursor.execute("SELECT * FROM anime_tensors where animeid != %s",[anime_id])
+    embeddings = []
+    anime_ids = []
+    for row in cursor.fetchall():
+        anime_ids.append(row[0])
+        embeddings.append(row[1:])
+    
+    # Compute cosine similarity between query_embedding and all other embeddings
+    similarities = cosine_similarity([query_embedding], embeddings)
+    
+    # Sort the results based on similarity
+    sorted_indices = np.argsort(similarities[0])[::-1]
+    
+    # Retrieve top N similar anime
+    top_n_similar = [anime_ids[idx] for idx in sorted_indices[:top_n]]
+    
+    return top_n_similar
+
+
 def recommend_anime(request):
     user_id=request.user.id
     user_mean_score= 8.0
@@ -340,19 +376,34 @@ def recommend_anime(request):
 
     # Step 2: Get the top 50 anime for each genre from the animemetadata table
     anime_list = []
-    for fav_genre in fav_genres:
-        cursor.execute("""
-            SELECT top 50 anime_id, Score,	Genres,	Type , Studios , Source
-            FROM Anime_Metadata
-            WHERE Genres LIKE %s
-            order by Score DESC
-        """, ['%' + fav_genre[0] + '%'])
-        anime_list.extend(cursor.fetchall())
-
     
+    cursor.execute('select animeid from historywatch where userid = %s',[request.user.id])
+    watched_animes=cursor.fetchall()
+    watched_animes=[watched_anime[0] for watched_anime in watched_animes]
+    if len(watched_animes) < 3:
+        for fav_genre in fav_genres:
+            cursor.execute("""
+                SELECT top 2000 anime_id, Score,	Genres,	Type , Studios , Source
+                FROM Anime_Metadata
+                WHERE Genres LIKE %s
+                order by Score DESC
+            """, ['%' + fav_genre[0] + '%'])
+            anime_list.extend(cursor.fetchall())
+
+    for watched_anime in watched_animes:
+        similar_animes=find_similar_anime(watched_anime,2000)
+        for similar_anime in similar_animes:
+            cursor.execute("""
+                SELECT anime_id, Score,	Genres,	Type , Studios , Source
+                FROM Anime_Metadata
+                WHERE anime_id = %s
+            """, [similar_anime])
+            anime_list.append(cursor.fetchone())
     columns = [col[0] for col in cursor.description]
-    df = pd.DataFrame(anime_list, columns=columns)
+    df = pd.DataFrame(np.array(anime_list), columns=columns)
     df.drop_duplicates(inplace=True)
+    df=df[~df['anime_id'].isin(watched_animes)]
+    df=df[~(df['Type']=='Music')]
 
     # Step 3: Use the TensorFlow model to predict ratings for each anime
     model_path=os.path.join(settings.MODELS,'merged_model.keras')
@@ -382,7 +433,7 @@ def recommend_anime(request):
     num_sources=len(source_vectorize_layer.get_vocabulary())
 
     
-    df.fillna({'Score':df['Score'].mean()},inplace=True)
+    df.fillna({'Score':df['Score'].astype(np.float32).mean()},inplace=True)
 
     df.loc[:,'Score']=score_scaler.transform(df[['Score']]).astype(np.float32)
 
@@ -457,16 +508,27 @@ def recommend_anime(request):
 
 
     final_df =pd.concat([df['anime_id'], output_df], axis=1)
-    final_df=final_df.nlargest(5,'rating')
+    final_df=final_df.nlargest(10,'rating')
 
     anime_ids=final_df['anime_id'].tolist()
     
     # Step 4: Save the top 5 recommended anime for each genre in a new table
     sql_query = """
-    INSERT INTO Recommendation (userid, animeid1, animeid2, animeid3, animeid4, animeid5)
-    VALUES (%s, %s, %s, %s, %s, %s)
-"""
-    cursor.execute(sql_query, [user_id] + anime_ids)
+
+    if exists(select * from recommendation where userid=%s)
+    begin
+        update recommendation
+        set AnimeID1=%s,AnimeID2=%s,AnimeID3=%s,AnimeID4=%s,AnimeID5=%s,AnimeID6=%s,AnimeID7=%s,AnimeID8=%s,AnimeID9=%s,AnimeID10=%s
+        where userid=%s
+    end
+    else
+    begin
+        insert into recommendation
+        values
+        (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    end
+    """
+    cursor.execute(sql_query, [user_id]+anime_ids+[user_id]+[user_id]+anime_ids)
 
     cursor.close()
     
@@ -510,26 +572,85 @@ def about_us(request):
 
 def filter_by_genre(request):
     selected_genre = request.POST.get('genre')
-    
+    if isinstance(selected_genre,str):
+        selected_genre='%'+selected_genre+'%'
     with connection.cursor() as cursor:
         cursor.execute(
             '''
             SELECT Top 1000 * FROM Anime_Metadata
-            WHERE Score > 7.99
-            '''
+            where genres like %s
+            order by Score desc
+            ''',[selected_genre]
         )
         anime_list = dictfetchall(cursor)
 
-    if selected_genre:
-        # Filter the fetched objects based on the selected genre
-        anime_list = [anime for anime in anime_list if anime['Genres'] and selected_genre in anime['Genres']]
+    # if selected_genre:
+    #     # Filter the fetched objects based on the selected genre
+    #     anime_list = [anime for anime in anime_list if anime['Genres'] and selected_genre in anime['Genres']]
 
     # Extract the first genre from each row to populate the filter options
-    genres = set()
-    for anime in anime_list:
-        if anime['Genres']:
-            first_genre = anime['Genres'].split(',')[0].strip()
-            genres.add(first_genre)
+    genres = [g[0] for g in FavGenres.genre.field.choices]
 
     return render(request, 'AnimeInsightApp/Genre.html', {'anime_list': anime_list, 'genres': sorted(genres)})
 		
+def request_anime(request):
+    if request.method == 'POST':
+        name=request.POST['name']
+        cursor=connection.cursor()
+        cursor.execute('insert into request values (%s,%s)',[request.user.id,name])
+        cursor.close()
+        return redirect('AnimeInsightApp:request_anime')
+    return render(request, 'AnimeInsightApp/request_anime.html')
+
+
+def one_anime_page(request, anime_id):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM Anime_Metadata WHERE anime_id = %s", [anime_id])
+        anime = cursor.fetchone()
+    
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT rev,rate FROM Review_Rating WHERE anime_id = %s", [anime_id])
+        reviews = cursor.fetchall()
+
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT username FROM AnimeInsightApp_user join Review_Rating on Review_Rating.user_id=AnimeInsightApp_user.id where anime_id = %s", [anime_id])
+        usr = cursor.fetchall()
+
+    
+    similar_animes=find_similar_anime(anime_id,5)
+    animes=[]
+    with connection.cursor() as cursor:
+        for similar_anime in similar_animes:
+            cursor.execute("SELECT anime_id , Name , Image_URL FROM anime_metadata WHERE anime_id = %s",[similar_anime])
+            animeinfo=cursor.fetchone()
+            animes.append(animeinfo)
+
+    
+    return render(request, 'AnimeInsightApp/oneanimepage.html', {'anime': anime, 'reviews': reviews, 'usr':usr,'animes':animes})
+    
+
+
+def add_review(request, anime_id):
+    if request.method == 'POST':
+        user_instance = request.user
+        review_text = request.POST.get('review_text')
+        rating = request.POST.get('rating')
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM Review_Rating WHERE user_id = %s AND anime_id = %s", [user_instance.id, anime_id])
+            review_count = cursor.fetchone()[0]
+        if review_count > 0:
+            with connection.cursor() as cursor:
+                sql_query = """
+                    UPDATE Review_Rating
+                    SET rev = %s, rate = %s
+                    WHERE user_id = %s AND anime_id = %s;
+                """
+                cursor.execute(sql_query, [review_text, rating, user_instance.id, anime_id])
+        else:
+            with connection.cursor() as cursor:
+                sql_query = """
+                    INSERT INTO Review_Rating (user_id, anime_id, rev, rate)
+                    VALUES (%s, %s, %s, %s);
+                """
+                cursor.execute(sql_query, [user_instance.id, anime_id, review_text, rating])
+        return redirect('AnimeInsightApp:one_anime_page',anime_id)
