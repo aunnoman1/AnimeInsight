@@ -53,15 +53,6 @@ class Historywatch(models.Model):
         unique_together = (('userid', 'animeid'),)
 
 
-class Rating(models.Model):
-    userid = models.ForeignKey(User, models.CASCADE, db_column='userID', primary_key=True)  # Field name made lowercase. The composite primary key (userID, AnimeID) found, that is not supported. The first column is selected.
-    animeid = models.ForeignKey(AnimeMetadata, models.CASCADE, db_column='AnimeID')  # Field name made lowercase.
-    rating = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'rating'
-        unique_together = (('userid', 'animeid'),)
 
 
 class Recommendation(models.Model):
@@ -167,3 +158,15 @@ class FavGenres(models.Model):
 
     class Meta:
         unique_together=(('userid','genre'),)
+
+
+class ReviewRating(models.Model):
+    user = models.ForeignKey(User, models.CASCADE, primary_key=True)  # The composite primary key (user_id, anime_id) found, that is not supported. The first column is selected.
+    anime = models.ForeignKey(AnimeMetadata, models.CASCADE)
+    rate = models.IntegerField(blank=True, null=True)
+    rev = models.TextField(db_collation='SQL_Latin1_General_CP1_CI_AS', blank=True, null=True)  # This field type is a guess.
+
+    class Meta:
+        managed = False
+        db_table = 'review_rating'
+        unique_together = (('user', 'anime'),)
