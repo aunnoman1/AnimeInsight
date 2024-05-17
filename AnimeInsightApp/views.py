@@ -105,13 +105,24 @@ def add_to_history(request, anime_id):
         
         anime_id = int(anime_id)
         
-        if not Historywatch.objects.filter(userid=user_instance, animeid_id=anime_id).exists():
-            Historywatch.objects.create(userid=user_instance, animeid_id=anime_id)
-            messages.success(request, 'Anime added to history')
-            t= threading.Thread(target=recommend_anime,args=[request])
-            t.start()
-        else:
-            messages.info(request, 'Anime already in history')
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*) FROM historywatch 
+                WHERE userid = %s AND animeid = %s
+            """, [user_instance.id, anime_id])
+            row_count = cursor.fetchone()[0]
+
+            if row_count == 0:
+                cursor.execute("""
+                    INSERT INTO historywatch (userid, animeid)
+                    VALUES (%s, %s)
+                """, [user_instance.id, anime_id])
+                messages.success(request, 'Anime added to history')
+                
+                t = threading.Thread(target=recommend_anime, args=[request])
+                t.start()
+            else:
+                messages.info(request, 'Anime already in history')
     
     return redirect('AnimeInsightApp:index')
 
